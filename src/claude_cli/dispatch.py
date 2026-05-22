@@ -3,11 +3,31 @@
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
 
-WORKFLOW_DIR = Path(__file__).resolve().parent.parent.parent / "claude-workflows"
+
+def _resolve_workflow_dir() -> Path:
+    env = os.environ.get("CLAUDE_WORKFLOWS_DIR", "").strip()
+    if env:
+        return Path(env).expanduser().resolve()
+    try:
+        from importlib.resources import files
+
+        pkg = files("claude_cli")
+        if pkg:
+            candidate = Path(str(pkg)).parent.parent / "claude-workflows"
+            if candidate.exists():
+                return candidate.resolve()
+    except (ImportError, ModuleNotFoundError, TypeError):
+        pass
+    fallback = Path(__file__).resolve().parent.parent.parent / "claude-workflows"
+    return fallback
+
+
+WORKFLOW_DIR = _resolve_workflow_dir()
 STATE_PATH = Path.home() / ".claude/data/state.json"
 
 PROFILE_TIERS: dict[str, int] = {

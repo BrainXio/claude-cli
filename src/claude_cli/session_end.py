@@ -14,17 +14,19 @@ os.environ["PKB_SKIP_ENSURE_DIRS"] = "1"
 from ._config import ROOT_DIR, REPORTS_LOGS, REPORTS_TMP, now
 from ._utils import extract_conversation_context, parse_stdin_json, spawn_detached
 
-logging.basicConfig(
-    filename=str(REPORTS_LOGS / "flush.log"),
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s [session-end] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
-
 MIN_TURNS_TO_FLUSH = 1
 
 
 def main() -> None:
+    os.environ["PKB_SKIP_ENSURE_DIRS"] = "1"
+
+    logging.basicConfig(
+        filename=str(REPORTS_LOGS / "flush.log"),
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s [session-end] %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
     hook_input = parse_stdin_json()
     if hook_input is None:
         return

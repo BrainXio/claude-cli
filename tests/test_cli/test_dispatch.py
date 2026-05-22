@@ -2,6 +2,7 @@
 
 import json
 import sys
+from pathlib import Path
 from unittest.mock import patch
 
 sys.path.insert(0, "/home/mister-robot/workspace/claude-cli/src")
@@ -336,3 +337,32 @@ def test_main_with_stage_filter(capsys, tmp_path, monkeypatch):
         output = json.loads(captured.out)
         assert len(output["stages"]) == 1
         assert output["stages"][0]["name"] == "test"
+
+
+def test_resolve_workflow_dir_env_var(monkeypatch, tmp_path):
+    """Test _resolve_workflow_dir prefers CLAUDE_WORKFLOWS_DIR env var."""
+    from claude_cli import dispatch
+
+    monkeypatch.setenv("CLAUDE_WORKFLOWS_DIR", str(tmp_path))
+    result = dispatch._resolve_workflow_dir()
+    assert result == tmp_path.resolve()
+
+
+def test_resolve_workflow_dir_env_var_expands_tilde(monkeypatch, tmp_path):
+    """Test _resolve_workflow_dir expands ~ in env var."""
+    from claude_cli import dispatch
+
+    monkeypatch.setenv("CLAUDE_WORKFLOWS_DIR", str(tmp_path).replace(str(Path.home()), "~"))
+    result = dispatch._resolve_workflow_dir()
+    assert result == tmp_path.resolve()
+
+
+def test_resolve_workflow_dir_no_env_no_importlib(monkeypatch):
+    """Test _resolve_workflow_dir falls back to Path(__file__) when no env and importlib fails."""
+    from claude_cli import dispatch
+
+    monkeypatch.delenv("CLAUDE_WORKFLOWS_DIR", raising=False)
+    # Force importlib.resources to fail by temporarily removing it
+    monkeypatch.setattr(dispatch, "__import__", lambda *a, **kw: (_ for _ in ()).throw(ImportError()), raising=False)
+    result = dispatch._resolve_workflow_dir()
+    assert "claude-workflows" in str(result)

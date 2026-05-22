@@ -33,7 +33,10 @@ ROOT_DIR = Path("~/.claude").expanduser().resolve()
 
 
 def get_allowed_repos() -> set[str]:
-    return set()  # empty default for open source
+    env = os.environ.get("CLAUDE_ALLOWED_REPOS", "").strip()
+    if env:
+        return {r.strip() for r in env.split(",") if r.strip()}
+    return set()  # safe default
 
 
 def now() -> datetime:
