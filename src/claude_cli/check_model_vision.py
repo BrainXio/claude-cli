@@ -4,7 +4,7 @@ Reads environment variables (ANTHROPIC_DEFAULT_*_MODEL, CLAUDE_CODE_SUBAGENT_MOD
 and state.json to build a comprehensive capability map. Queries the local Ollama
 instance via `ollama show` and falls back to known vision-capable model families.
 
-Writes the result to ~/.brainxio/data/model-capabilities.json so agents can
+Writes the result to ~/.claude/data/model-capabilities.json so agents can
 guard vision tool calls before invoking them.
 
 Intended as a SessionStart hook.
@@ -18,8 +18,8 @@ import urllib.request
 from typing import Any
 
 
-STATE_FILE = os.path.expanduser("~/.brainxio/data/state.json")
-CAP_FILE = os.path.expanduser("~/.brainxio/data/model-capabilities.json")
+STATE_FILE = os.path.expanduser("~/.claude/data/state.json")
+CAP_FILE = os.path.expanduser("~/.claude/data/model-capabilities.json")
 
 OLLAMA_URL = os.environ.get("ANTHROPIC_BASE_URL", "http://localhost:11434")
 if OLLAMA_URL.endswith("/v1"):

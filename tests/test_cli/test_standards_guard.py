@@ -72,7 +72,7 @@ def test_check_content_phantom_repo():
     from claude_cli.standards_guard import check_content
 
     content = (
-        "See https://github.com/brainxio/tools for more info.\n"
+        "See https://github.com/BrainXio/tools for more info.\n"
         "And https://github.com/evil/hack for bad stuff."
     )
     violations = check_content(content, "README.md")
@@ -140,7 +140,7 @@ def test_main_valid_json_allowed_repo(capsys: pytest.CaptureFixture) -> None:
                 "tool_name": "Edit",
                 "tool_input": {
                     "file_path": ".github/README.md",
-                    "new_string": "https://github.com/brainxio/tools is allowed",
+                    "new_string": "https://github.com/BrainXio/tools is allowed",
                 },
             }
         ),

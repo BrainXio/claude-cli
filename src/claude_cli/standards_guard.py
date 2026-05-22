@@ -57,13 +57,13 @@ MANIFESTO_TONE = [
 ]
 
 ALLOWED_REPOS = {
-    "brainxio/.claude",
-    "brainxio/.agents",
-    "brainxio/.ollama",
-    "brainxio/.containers",
-    "brainxio/workflows",
-    "brainxio/tools",
-    "brainxio/.github",
+    "BrainXio/.claude",
+    "BrainXio/.agents",
+    "BrainXio/.ollama",
+    "BrainXio/.containers",
+    "BrainXio/workflows",
+    "BrainXio/tools",
+    "BrainXio/.github",
 }
 
 PHANTOM_REPO_RE = re.compile(

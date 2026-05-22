@@ -63,36 +63,36 @@ def test_get_active_model_missing_mode():
             assert result is None
 
 
-def test_main_empty_env_vars():
+def test_main_empty_env_vars(tmp_path):
     """Test main() when no model env vars are set."""
-    from claude_cli.check_model_vision import main
+    from claude_cli import check_model_vision
 
-    with patch.dict(os.environ, {}, clear=True):
-        with patch("os.makedirs") as mock_makedirs:
+    cap_file = tmp_path / "model-capabilities.json"
+    with patch.object(check_model_vision, "CAP_FILE", str(cap_file)):
+        with patch.dict(os.environ, {}, clear=True):
             with patch("os.path.exists", return_value=False):
-                with patch("builtins.open"):
-                    main()
-                    # Should create the cap file
-                    mock_makedirs.assert_called()
+                check_model_vision.main()
+                # Should create the cap file
+                assert cap_file.exists()
 
 
-def test_main_active_model_legacy():
+def test_main_active_model_legacy(tmp_path):
     """Test main() includes __active__ model when state exists."""
-    from claude_cli.check_model_vision import main
+    from claude_cli import check_model_vision
 
-    state = {"mode": {"string": "Ollama-Cloud:granite-guardian:latest"}}
+    cap_file = tmp_path / "model-capabilities.json"
 
-    with patch("os.path.exists", return_value=True):
-        with patch("builtins.open") as mock_open:
-            mock_file = MagicMock()
-            mock_file.read.return_value = json.dumps(state)
-            mock_open.return_value.__enter__.return_value = mock_file
-            with patch("os.makedirs"):
-                with patch(
-                    "claude_cli.check_model_vision.check_model_vision"
-                ) as mock_check:
-                    mock_check.return_value = (None, None)
-                    main()
+    with patch.object(check_model_vision, "CAP_FILE", str(cap_file)):
+        with patch(
+            "claude_cli.check_model_vision.get_active_model",
+            return_value="granite-guardian:latest",
+        ):
+            with patch(
+                "claude_cli.check_model_vision.check_model_vision"
+            ) as mock_check:
+                mock_check.return_value = (None, None)
+                check_model_vision.main()
+                assert cap_file.exists()
 
 
 def test_ollama_tags_success():
@@ -212,66 +212,67 @@ def test_check_model_vision_known_remote():
             assert matched == "qwen-vl"
 
 
-def test_main_empty_env_vars_with_active_model_patch():
+def test_main_empty_env_vars_with_active_model_patch(tmp_path):
     """Test main() when no model env vars are set and no active model."""
-    from claude_cli.check_model_vision import main
+    from claude_cli import check_model_vision
 
-    with patch.dict(os.environ, {}, clear=True):
-        with patch("os.makedirs") as mock_makedirs:
+    cap_file = tmp_path / "model-capabilities.json"
+    with patch.object(check_model_vision, "CAP_FILE", str(cap_file)):
+        with patch.dict(os.environ, {}, clear=True):
             with patch(
                 "claude_cli.check_model_vision.get_active_model", return_value=None
             ):
-                main()
+                check_model_vision.main()
                 # Should create the cap file
-                mock_makedirs.assert_called()
+                assert cap_file.exists()
 
 
-def test_main_with_env_var():
+def test_main_with_env_var(tmp_path):
     """Test main() with ANTHROPIC_DEFAULT_SONNET_MODEL set."""
-    from claude_cli.check_model_vision import main
+    from claude_cli import check_model_vision
 
-    with patch.dict(
-        os.environ, {"ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-3-5-sonnet"}
-    ):
-        with patch("os.path.exists", return_value=False):
-            with patch("os.makedirs"):
+    cap_file = tmp_path / "model-capabilities.json"
+    with patch.object(check_model_vision, "CAP_FILE", str(cap_file)):
+        with patch.dict(
+            os.environ, {"ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-3-5-sonnet"}
+        ):
+            with patch("os.path.exists", return_value=False):
                 with patch(
                     "claude_cli.check_model_vision.check_model_vision"
                 ) as mock_check:
                     mock_check.return_value = (None, None)
-                    with patch("builtins.open"):
-                        main()
+                    check_model_vision.main()
+                    assert cap_file.exists()
 
 
-def test_main_active_model():
+def test_main_active_model(tmp_path):
     """Test main() includes __active__ model when state exists."""
-    from claude_cli.check_model_vision import main
+    from claude_cli import check_model_vision
 
-    with patch("os.path.exists", return_value=True):
-        with patch("os.makedirs"):
-            with patch("builtins.open") as mock_open:
-                mock_file = MagicMock()
-                mock_file.read.return_value = (
-                    '{"mode": {"string": "Ollama-Cloud:granite-guardian:latest"}}'
-                )
-                mock_open.return_value.__enter__.return_value = mock_file
-                with patch(
-                    "claude_cli.check_model_vision.check_model_vision"
-                ) as mock_check:
-                    mock_check.return_value = (None, None)
-                    main()
+    cap_file = tmp_path / "model-capabilities.json"
+    with patch.object(check_model_vision, "CAP_FILE", str(cap_file)):
+        with patch(
+            "claude_cli.check_model_vision.get_active_model",
+            return_value="granite-guardian:latest",
+        ):
+            with patch(
+                "claude_cli.check_model_vision.check_model_vision"
+            ) as mock_check:
+                mock_check.return_value = (None, None)
+                check_model_vision.main()
+                assert cap_file.exists()
 
 
-def test_main_output_format():
+def test_main_output_format(tmp_path):
     """Test main() output includes required fields."""
-    from claude_cli.check_model_vision import main
+    from claude_cli import check_model_vision
 
-    with patch.dict(os.environ, {}):
-        with patch("os.path.exists", return_value=False):
-            with patch("os.makedirs"):
-                with patch("builtins.open") as mock_open:
-                    with patch("subprocess.check_output") as mock_check:
-                        mock_check.return_value = b"2024-01-01T00:00:00+00:00"
-                        main()
-                        # Check output was written to file
-                        assert mock_open.called
+    cap_file = tmp_path / "model-capabilities.json"
+    with patch.object(check_model_vision, "CAP_FILE", str(cap_file)):
+        with patch.dict(os.environ, {}):
+            with patch("os.path.exists", return_value=False):
+                with patch("subprocess.check_output") as mock_check:
+                    mock_check.return_value = b"2024-01-01T00:00:00+00:00"
+                    check_model_vision.main()
+                    # Check output was written to file
+                    assert cap_file.exists()
