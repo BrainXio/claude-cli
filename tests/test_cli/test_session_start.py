@@ -1,8 +1,8 @@
 """Tests for claude_cli.session_start."""
+
 import sys
 from datetime import datetime, timedelta
-from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 sys.path.insert(0, "/home/mister-robot/workspace/claude-cli/src")
 

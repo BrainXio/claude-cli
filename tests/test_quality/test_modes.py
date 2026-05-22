@@ -101,6 +101,7 @@ def test_get_mode_with_invalid_json(monkeypatch, tmp_path) -> None:
     state_file.write_text("invalid json {")
 
     from claude_quality import modes as modes_module
+
     monkeypatch.setattr(modes_module, "_STATE_FILE", state_file)
 
     result = get_mode()
@@ -112,9 +113,11 @@ def test_get_mode_with_invalid_mode_value(monkeypatch, tmp_path) -> None:
     state_file = tmp_path / ".claude" / "mode_state.json"
     state_file.parent.mkdir(parents=True)
     import json
+
     state_file.write_text(json.dumps({"mode": "invalid_mode"}))
 
     from claude_quality import modes as modes_module
+
     monkeypatch.setattr(modes_module, "_STATE_FILE", state_file)
 
     result = get_mode()
@@ -124,16 +127,17 @@ def test_get_mode_with_invalid_mode_value(monkeypatch, tmp_path) -> None:
 def test_get_mode_with_os_error(monkeypatch, tmp_path) -> None:
     """Test that get_mode falls back to DEVELOPER when file read fails."""
     import json
+
     state_file = tmp_path / ".claude" / "mode_state.json"
     state_file.parent.mkdir(parents=True)
     state_file.write_text(json.dumps({"mode": "developer"}))
 
     from claude_quality import modes as modes_module
+
     monkeypatch.setattr(modes_module, "_STATE_FILE", state_file)
 
     # Monkeypatch the json.loads call to raise OSError
     import json as json_module
-    original_loads = json_module.loads
 
     def mock_loads(*args, **kwargs):
         raise OSError("Permission denied")
@@ -154,6 +158,7 @@ def test_get_mode_thresholds_custom_mode() -> None:
 def test_set_mode_creates_file(tmp_path, monkeypatch) -> None:
     """Test that set_mode creates the state file."""
     import json
+
     state_file = tmp_path / ".claude" / "mode_state.json"
     monkeypatch.setattr("claude_quality.modes._STATE_FILE", state_file)
 
@@ -168,6 +173,7 @@ def test_set_mode_creates_file(tmp_path, monkeypatch) -> None:
 def test_set_mode_overwrites_existing(tmp_path, monkeypatch) -> None:
     """Test that set_mode overwrites an existing state file."""
     import json
+
     state_file = tmp_path / ".claude" / "mode_state.json"
     state_file.parent.mkdir(parents=True)
     state_file.write_text(json.dumps({"mode": "developer"}))

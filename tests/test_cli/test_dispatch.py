@@ -1,8 +1,8 @@
 """Tests for claude_cli.dispatch."""
+
 import json
 import sys
-from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 sys.path.insert(0, "/home/mister-robot/workspace/claude-cli/src")
 
@@ -43,31 +43,28 @@ def test_get_tier_empty_state():
     assert tier == 0
 
 
-def test_load_workflow_exists():
+def test_load_workflow_exists(tmp_path, monkeypatch):
     """Test load_workflow finds and loads an existing workflow."""
-    from claude_cli.dispatch import load_workflow, WORKFLOW_DIR
+    from claude_cli import dispatch
 
-    # Create a test workflow
-    test_workflow_dir = WORKFLOW_DIR
-    test_workflow_file = test_workflow_dir / "test-workflow.json"
-    test_workflow_file.write_text(json.dumps({
-        "workflow": "test-workflow",
-        "description": "Test workflow",
-        "stages": []
-    }))
+    # Create a test workflow in temp dir
+    test_workflow_file = tmp_path / "test-workflow.json"
+    test_workflow_file.write_text(
+        json.dumps(
+            {"workflow": "test-workflow", "description": "Test workflow", "stages": []}
+        )
+    )
+    monkeypatch.setattr(dispatch, "WORKFLOW_DIR", tmp_path)
 
-    try:
-        workflow = load_workflow("test-workflow")
-        assert workflow["workflow"] == "test-workflow"
-    finally:
-        test_workflow_file.unlink()
+    workflow = dispatch.load_workflow("test-workflow")
+    assert workflow["workflow"] == "test-workflow"
 
 
 def test_load_workflow_not_found():
     """Test load_workflow exits with error when workflow not found."""
     import pytest
-    from claude_cli import dispatch
     from pathlib import Path
+    from claude_cli import dispatch
 
     orig_workflow_dir = dispatch.WORKFLOW_DIR
     dispatch.WORKFLOW_DIR = Path("/nonexistent/workflows")
@@ -229,10 +226,18 @@ def test_print_plan(capsys):
         "workflow": "test",
         "tier": 3,
         "stages": [
-            {"name": "a", "gate": "always", "agent": "test-agent",
-             "gate_passed": True, "fallback": None, "parallel": False,
-             "max_concurrent": 1, "depends_on": [], "output": "",
-             "sub_agents": []},
+            {
+                "name": "a",
+                "gate": "always",
+                "agent": "test-agent",
+                "gate_passed": True,
+                "fallback": None,
+                "parallel": False,
+                "max_concurrent": 1,
+                "depends_on": [],
+                "output": "",
+                "sub_agents": [],
+            },
         ],
         "stage_filter": None,
     }
@@ -251,10 +256,18 @@ def test_print_plan_with_stage_filter(capsys):
         "workflow": "test",
         "tier": 3,
         "stages": [
-            {"name": "a", "gate": "always", "agent": "test-agent",
-             "gate_passed": True, "fallback": None, "parallel": False,
-             "max_concurrent": 1, "depends_on": [], "output": "",
-             "sub_agents": []},
+            {
+                "name": "a",
+                "gate": "always",
+                "agent": "test-agent",
+                "gate_passed": True,
+                "fallback": None,
+                "parallel": False,
+                "max_concurrent": 1,
+                "depends_on": [],
+                "output": "",
+                "sub_agents": [],
+            },
         ],
         "stage_filter": "a",
     }
@@ -264,74 +277,62 @@ def test_print_plan_with_stage_filter(capsys):
     assert "(stage: a)" in captured.out
 
 
-def test_main_with_json_output(capsys):
+def test_main_with_json_output(capsys, tmp_path, monkeypatch):
     """Test main() with --json flag."""
-    from claude_cli.dispatch import main
+    from claude_cli import dispatch
 
-    # Create a test workflow
-    test_workflow_dir = Path("/home/mister-robot/workspace/claude-cli/claude-workflows")
-    test_workflow_dir.mkdir(exist_ok=True)
-    test_workflow_file = test_workflow_dir / "test.json"
-    test_workflow_file.write_text(json.dumps({
-        "workflow": "test",
-        "description": "Test",
-        "stages": []
-    }))
+    # Create a test workflow in temp dir
+    test_workflow_file = tmp_path / "test.json"
+    test_workflow_file.write_text(
+        json.dumps({"workflow": "test", "description": "Test", "stages": []})
+    )
+    monkeypatch.setattr(dispatch, "WORKFLOW_DIR", tmp_path)
 
-    try:
-        with patch("sys.argv", ["dispatch", "test", "--json"]):
-            main()
-            captured = capsys.readouterr()
-            result = json.loads(captured.out)
-            assert result["workflow"] == "test"
-    finally:
-        test_workflow_file.unlink()
+    with patch("sys.argv", ["dispatch", "test", "--json"]):
+        dispatch.main()
+        captured = capsys.readouterr()
+        result = json.loads(captured.out)
+        assert result["workflow"] == "test"
 
 
-def test_main_with_dry_run(capsys):
+def test_main_with_dry_run(capsys, tmp_path, monkeypatch):
     """Test main() with --dry-run flag."""
-    from claude_cli.dispatch import main
+    from claude_cli import dispatch
 
-    test_workflow_dir = Path("/home/mister-robot/workspace/claude-cli/claude-workflows")
-    test_workflow_dir.mkdir(exist_ok=True)
-    test_workflow_file = test_workflow_dir / "test.json"
-    test_workflow_file.write_text(json.dumps({
-        "workflow": "test",
-        "description": "Test",
-        "stages": []
-    }))
+    test_workflow_file = tmp_path / "test.json"
+    test_workflow_file.write_text(
+        json.dumps({"workflow": "test", "description": "Test", "stages": []})
+    )
+    monkeypatch.setattr(dispatch, "WORKFLOW_DIR", tmp_path)
 
-    try:
-        with patch("sys.argv", ["dispatch", "test", "--dry-run"]):
-            main()
-            captured = capsys.readouterr()
-            assert "DRY RUN" in captured.out
-    finally:
-        test_workflow_file.unlink()
+    with patch("sys.argv", ["dispatch", "test", "--dry-run"]):
+        dispatch.main()
+        captured = capsys.readouterr()
+        assert "DRY RUN" in captured.out
 
 
-def test_main_with_stage_filter(capsys):
+def test_main_with_stage_filter(capsys, tmp_path, monkeypatch):
     """Test main() with --stage flag."""
-    from claude_cli.dispatch import main
+    from claude_cli import dispatch
 
-    test_workflow_dir = Path("/home/mister-robot/workspace/claude-cli/claude-workflows")
-    test_workflow_dir.mkdir(exist_ok=True)
-    test_workflow_file = test_workflow_dir / "test.json"
-    test_workflow_file.write_text(json.dumps({
-        "workflow": "test",
-        "description": "Test",
-        "stages": [
-            {"name": "build", "gate": "always"},
-            {"name": "test", "gate": "always"},
-        ],
-    }))
+    test_workflow_file = tmp_path / "test.json"
+    test_workflow_file.write_text(
+        json.dumps(
+            {
+                "workflow": "test",
+                "description": "Test",
+                "stages": [
+                    {"name": "build", "gate": "always"},
+                    {"name": "test", "gate": "always"},
+                ],
+            }
+        )
+    )
+    monkeypatch.setattr(dispatch, "WORKFLOW_DIR", tmp_path)
 
-    try:
-        with patch("sys.argv", ["dispatch", "test", "--stage", "test", "--json"]):
-            main()
-            captured = capsys.readouterr()
-            output = json.loads(captured.out)
-            assert len(output["stages"]) == 1
-            assert output["stages"][0]["name"] == "test"
-    finally:
-        test_workflow_file.unlink()
+    with patch("sys.argv", ["dispatch", "test", "--stage", "test", "--json"]):
+        dispatch.main()
+        captured = capsys.readouterr()
+        output = json.loads(captured.out)
+        assert len(output["stages"]) == 1
+        assert output["stages"][0]["name"] == "test"

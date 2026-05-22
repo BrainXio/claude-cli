@@ -1,4 +1,5 @@
 """Tests for claude_cli.pre_commit."""
+
 import sys
 from unittest.mock import patch, MagicMock
 

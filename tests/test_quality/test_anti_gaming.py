@@ -78,7 +78,9 @@ def test_academic_phrase_detected() -> None:
         "According to the literature, we need a reflection layer",
         concrete_failure="Current system can't self-correct",
     )
-    academic = [v for v in violations if v.principle == Principle.NO_ACADEMIC_VALIDATION]
+    academic = [
+        v for v in violations if v.principle == Principle.NO_ACADEMIC_VALIDATION
+    ]
     assert len(academic) > 0
 
 
@@ -170,7 +172,14 @@ def test_validate_proposal_short_concrete_failure() -> None:
 
 def test_validate_proposal_only_activity_metric() -> None:
     """Test detection of various activity metrics."""
-    for kw in ["posts", "attendance", "labels generated", "meeting count", "bus activity", "channel messages"]:
+    for kw in [
+        "posts",
+        "attendance",
+        "labels generated",
+        "meeting count",
+        "bus activity",
+        "channel messages",
+    ]:
         violations = validate_proposal(
             f"Reward {kw}",
             concrete_failure="problem exists",
@@ -193,7 +202,9 @@ def test_validate_proposal_only_academic_phrases() -> None:
             f"{phrase} we need a solution",
             concrete_failure="problem exists",
         )
-        academic = [v for v in violations if v.principle == Principle.NO_ACADEMIC_VALIDATION]
+        academic = [
+            v for v in violations if v.principle == Principle.NO_ACADEMIC_VALIDATION
+        ]
         assert len(academic) > 0, f"Should detect academic phrase: {phrase}"
 
 
@@ -210,13 +221,23 @@ def test_validate_proposal_only_capability_gaps() -> None:
             f"Add feature {gap}",
             concrete_failure="problem exists",
         )
-        capability = [v for v in violations if v.principle == Principle.DESIGN_FOR_CURRENT]
+        capability = [
+            v for v in violations if v.principle == Principle.DESIGN_FOR_CURRENT
+        ]
         assert len(capability) > 0, f"Should detect capability gap: {gap}"
 
 
 def test_validate_proposal_only_penalty_keywords() -> None:
     """Test detection of various penalty keywords."""
-    keywords = ["strike", "penalty", "punish", "negligence multiplier", "error cost", "reputation score", "adversarial audit"]
+    keywords = [
+        "strike",
+        "penalty",
+        "punish",
+        "negligence multiplier",
+        "error cost",
+        "reputation score",
+        "adversarial audit",
+    ]
     for kw in keywords:
         violations = validate_proposal(
             f"Implement {kw} system",

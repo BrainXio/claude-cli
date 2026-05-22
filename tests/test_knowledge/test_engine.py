@@ -1,18 +1,19 @@
 """Tests for claude_knowledge.engine."""
 
-import json
 from pathlib import Path
 
 import pytest
 
-from claude_knowledge import _utils, _config, ingest, compile
+from claude_knowledge import _utils, _config
 from claude_knowledge.engine import run_pipeline
 
 
 class TestRunPipeline:
     """Test run_pipeline function."""
 
-    def test_empty_source(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_empty_source(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test running pipeline on empty source directory."""
         source_dir = tmp_path / "source"
         source_dir.mkdir()
@@ -47,7 +48,9 @@ class TestRunPipeline:
         assert "compiled" in result
         assert "issues" in result
 
-    def test_pipeline_with_markdown_files(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_pipeline_with_markdown_files(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test running pipeline with markdown files."""
         source_dir = tmp_path / "source"
         source_dir.mkdir()
@@ -78,7 +81,9 @@ class TestRunPipeline:
         assert result["ingested"] == 2
         assert "errors" in result
 
-    def test_pipeline_dry_run(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_pipeline_dry_run(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test running pipeline in dry-run mode."""
         source_dir = tmp_path / "source"
         source_dir.mkdir()
@@ -91,22 +96,32 @@ class TestRunPipeline:
         (mock_kb_dir / "qa").mkdir()
 
         # Patch _utils functions
-        monkeypatch.setattr("claude_knowledge._utils.get_knowledge_dir", lambda: mock_kb_dir)
+        monkeypatch.setattr(
+            "claude_knowledge._utils.get_knowledge_dir", lambda: mock_kb_dir
+        )
         monkeypatch.setattr("claude_knowledge._utils.list_wiki_articles", lambda: [])
         monkeypatch.setattr("claude_knowledge._utils.list_raw_files", lambda: [])
         monkeypatch.setattr("claude_knowledge._utils.load_state", lambda: {})
         monkeypatch.setattr(_config, "get_knowledge_dir", lambda: mock_kb_dir)
         monkeypatch.setattr(_config, "get_daily_dir", lambda: tmp_path / "daily")
-        monkeypatch.setattr("claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir)
-        monkeypatch.setattr("claude_knowledge._config.REPORTS_DIR", tmp_path / "reports")
-        monkeypatch.setattr("claude_knowledge._config.now_iso", lambda: "2024-01-15T10:00:00")
+        monkeypatch.setattr(
+            "claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir
+        )
+        monkeypatch.setattr(
+            "claude_knowledge._config.REPORTS_DIR", tmp_path / "reports"
+        )
+        monkeypatch.setattr(
+            "claude_knowledge._config.now_iso", lambda: "2024-01-15T10:00:00"
+        )
 
         result = run_pipeline(source_dir, dry_run=True)
 
         assert result["ingested"] == 1
         assert "errors" in result
 
-    def test_pipeline_force_all(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_pipeline_force_all(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test running pipeline with force_all flag."""
         source_dir = tmp_path / "source"
         source_dir.mkdir()
@@ -119,15 +134,23 @@ class TestRunPipeline:
         (mock_kb_dir / "qa").mkdir()
 
         # Patch _utils functions
-        monkeypatch.setattr("claude_knowledge._utils.get_knowledge_dir", lambda: mock_kb_dir)
+        monkeypatch.setattr(
+            "claude_knowledge._utils.get_knowledge_dir", lambda: mock_kb_dir
+        )
         monkeypatch.setattr("claude_knowledge._utils.list_wiki_articles", lambda: [])
         monkeypatch.setattr("claude_knowledge._utils.list_raw_files", lambda: [])
         monkeypatch.setattr("claude_knowledge._utils.load_state", lambda: {})
         monkeypatch.setattr(_config, "get_knowledge_dir", lambda: mock_kb_dir)
         monkeypatch.setattr(_config, "get_daily_dir", lambda: tmp_path / "daily")
-        monkeypatch.setattr("claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir)
-        monkeypatch.setattr("claude_knowledge._config.REPORTS_DIR", tmp_path / "reports")
-        monkeypatch.setattr("claude_knowledge._config.now_iso", lambda: "2024-01-15T10:00:00")
+        monkeypatch.setattr(
+            "claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir
+        )
+        monkeypatch.setattr(
+            "claude_knowledge._config.REPORTS_DIR", tmp_path / "reports"
+        )
+        monkeypatch.setattr(
+            "claude_knowledge._config.now_iso", lambda: "2024-01-15T10:00:00"
+        )
 
         # First run
         result1 = run_pipeline(source_dir)
@@ -142,7 +165,9 @@ class TestRunPipeline:
         assert result3["ingested"] == 1
         assert result3["unchanged"] == 0
 
-    def test_pipeline_errors_handling(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_pipeline_errors_handling(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that errors are captured in pipeline results."""
         source_dir = tmp_path / "source"
         source_dir.mkdir()
@@ -155,22 +180,32 @@ class TestRunPipeline:
         (mock_kb_dir / "qa").mkdir()
 
         # Patch _utils functions
-        monkeypatch.setattr("claude_knowledge._utils.get_knowledge_dir", lambda: mock_kb_dir)
+        monkeypatch.setattr(
+            "claude_knowledge._utils.get_knowledge_dir", lambda: mock_kb_dir
+        )
         monkeypatch.setattr("claude_knowledge._utils.list_wiki_articles", lambda: [])
         monkeypatch.setattr("claude_knowledge._utils.list_raw_files", lambda: [])
         monkeypatch.setattr("claude_knowledge._utils.load_state", lambda: {})
         monkeypatch.setattr(_config, "get_knowledge_dir", lambda: mock_kb_dir)
         monkeypatch.setattr(_config, "get_daily_dir", lambda: tmp_path / "daily")
-        monkeypatch.setattr("claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir)
-        monkeypatch.setattr("claude_knowledge._config.REPORTS_DIR", tmp_path / "reports")
-        monkeypatch.setattr("claude_knowledge._config.now_iso", lambda: "2024-01-15T10:00:00")
+        monkeypatch.setattr(
+            "claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir
+        )
+        monkeypatch.setattr(
+            "claude_knowledge._config.REPORTS_DIR", tmp_path / "reports"
+        )
+        monkeypatch.setattr(
+            "claude_knowledge._config.now_iso", lambda: "2024-01-15T10:00:00"
+        )
 
         result = run_pipeline(source_dir)
 
         assert "errors" in result
         assert isinstance(result["errors"], list)
 
-    def test_pipeline_validation_issues(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_pipeline_validation_issues(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that validation issues are captured in pipeline results."""
         source_dir = tmp_path / "source"
         source_dir.mkdir()
@@ -182,15 +217,23 @@ class TestRunPipeline:
         (mock_kb_dir / "qa").mkdir()
 
         # Patch _utils functions
-        monkeypatch.setattr("claude_knowledge._utils.get_knowledge_dir", lambda: mock_kb_dir)
+        monkeypatch.setattr(
+            "claude_knowledge._utils.get_knowledge_dir", lambda: mock_kb_dir
+        )
         monkeypatch.setattr("claude_knowledge._utils.list_wiki_articles", lambda: [])
         monkeypatch.setattr("claude_knowledge._utils.list_raw_files", lambda: [])
         monkeypatch.setattr("claude_knowledge._utils.load_state", lambda: {})
         monkeypatch.setattr(_config, "get_knowledge_dir", lambda: mock_kb_dir)
         monkeypatch.setattr(_config, "get_daily_dir", lambda: tmp_path / "daily")
-        monkeypatch.setattr("claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir)
-        monkeypatch.setattr("claude_knowledge._config.REPORTS_DIR", tmp_path / "reports")
-        monkeypatch.setattr("claude_knowledge._config.now_iso", lambda: "2024-01-15T10:00:00")
+        monkeypatch.setattr(
+            "claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir
+        )
+        monkeypatch.setattr(
+            "claude_knowledge._config.REPORTS_DIR", tmp_path / "reports"
+        )
+        monkeypatch.setattr(
+            "claude_knowledge._config.now_iso", lambda: "2024-01-15T10:00:00"
+        )
 
         result = run_pipeline(source_dir)
 

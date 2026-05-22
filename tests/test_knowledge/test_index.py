@@ -1,7 +1,6 @@
 """Tests for claude_knowledge.index."""
 
 import json
-import os
 from pathlib import Path
 
 import pytest
@@ -66,7 +65,9 @@ class TestBuildIndex:
         assert content["document_count"] == 1
         assert content["corpus_hash"] is not None
 
-    def test_build_index_default_path(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_build_index_default_path(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that default path uses KNOWLEDGE_DIR."""
         mock_kb_dir = tmp_path / "knowledge"
         mock_kb_dir.mkdir()
@@ -101,13 +102,14 @@ class TestLoadIndex:
         result = load_index(index_path)
         assert result is None
 
-    def test_load_index_default_path(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_load_index_default_path(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test loading index from default path."""
         mock_kb_dir = tmp_path / "knowledge"
         mock_kb_dir.mkdir()
         monkeypatch.setattr("claude_knowledge._config.KNOWLEDGE_DIR", mock_kb_dir)
 
-        index_path = mock_kb_dir / "index_cache.json"
         documents = [("doc1", "test content")]
         build_index(documents)
 
@@ -210,13 +212,14 @@ class TestIndexIsStale:
         result = index_is_stale(documents2, index_path)
         assert result is True
 
-    def test_stale_default_path(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_stale_default_path(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that default path uses KNOWLEDGE_DIR."""
         mock_kb_dir = tmp_path / "knowledge"
         mock_kb_dir.mkdir()
         monkeypatch.setattr("claude_knowledge._config.KNOWLEDGE_DIR", mock_kb_dir)
 
-        index_path = mock_kb_dir / "index_cache.json"
         documents = [("doc1", "test content")]
         build_index(documents)
 

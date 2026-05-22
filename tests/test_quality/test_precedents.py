@@ -1,10 +1,7 @@
 """Tests for claude_quality.precedents - issue precedent recording and checking."""
 
 import json
-from datetime import datetime
-from pathlib import Path
 
-import pytest
 
 from claude_quality.precedents import (
     Precedent,
@@ -125,7 +122,21 @@ class TestRecordIssue:
         )
         # Create initial file
         (tmp_path / "precedents.json").write_text(
-            json.dumps({"precedents": [{"check": "initial", "description": "Initial", "fix": "Fix", "scope": "both", "severity": "warning", "created_at": "2024-01-01T00:00:00", "hits": 0}]})
+            json.dumps(
+                {
+                    "precedents": [
+                        {
+                            "check": "initial",
+                            "description": "Initial",
+                            "fix": "Fix",
+                            "scope": "both",
+                            "severity": "warning",
+                            "created_at": "2024-01-01T00:00:00",
+                            "hits": 0,
+                        }
+                    ]
+                }
+            )
         )
 
         record_issue(
@@ -201,6 +212,7 @@ class TestCheckPrecedent:
     def test_check_precedent_timeout(self, tmp_path, monkeypatch) -> None:
         """Test that timeout returns (False, 'Timeout')."""
         import subprocess
+
         p = Precedent(
             check="sleep 10",
             description="Test",
@@ -210,7 +222,7 @@ class TestCheckPrecedent:
         )
 
         # Temporarily set timeout very short
-        from claude_quality import precedents
+
         original_run = subprocess.run
 
         def mock_run(*args, **kwargs):
@@ -272,7 +284,9 @@ class TestRunPrecedentChecks:
                 "hits": 0,
             }
         ]
-        (tmp_path / "precedents.json").write_text(json.dumps({"precedents": precedents}))
+        (tmp_path / "precedents.json").write_text(
+            json.dumps({"precedents": precedents})
+        )
 
         results = run_precedent_checks(scope="both")
         assert results["warning"] == []
@@ -294,7 +308,9 @@ class TestRunPrecedentChecks:
                 "hits": 0,
             }
         ]
-        (tmp_path / "precedents.json").write_text(json.dumps({"precedents": precedents}))
+        (tmp_path / "precedents.json").write_text(
+            json.dumps({"precedents": precedents})
+        )
 
         results = run_precedent_checks(scope="both")
         assert len(results["warning"]) == 1
@@ -328,7 +344,9 @@ class TestRunPrecedentChecks:
                 "hits": 0,
             },
         ]
-        (tmp_path / "precedents.json").write_text(json.dumps({"precedents": precedents}))
+        (tmp_path / "precedents.json").write_text(
+            json.dumps({"precedents": precedents})
+        )
 
         # Only local scope - both fail so both should appear
         results = run_precedent_checks(scope="local")
@@ -355,14 +373,18 @@ class TestRunPrecedentChecks:
                 "hits": 5,
             }
         ]
-        (tmp_path / "precedents.json").write_text(json.dumps({"precedents": precedents}))
+        (tmp_path / "precedents.json").write_text(
+            json.dumps({"precedents": precedents})
+        )
 
         results = run_precedent_checks(scope="both")
         assert len(results["warning"]) == 1
         # Hits should be incremented
         assert results["warning"][0]["hits"] == 6
 
-    def test_run_precedent_checks_multiple_severities(self, tmp_path, monkeypatch) -> None:
+    def test_run_precedent_checks_multiple_severities(
+        self, tmp_path, monkeypatch
+    ) -> None:
         """Test that results are grouped by severity."""
         monkeypatch.setattr(
             "claude_quality.precedents._PRECEDENTS_FILE",
@@ -406,7 +428,9 @@ class TestRunPrecedentChecks:
                 "hits": 0,
             },
         ]
-        (tmp_path / "precedents.json").write_text(json.dumps({"precedents": precedents}))
+        (tmp_path / "precedents.json").write_text(
+            json.dumps({"precedents": precedents})
+        )
 
         results = run_precedent_checks(scope="both")
         assert len(results["info"]) == 1
@@ -431,13 +455,17 @@ class TestRunPrecedentChecks:
                 "hits": 0,
             }
         ]
-        (tmp_path / "precedents.json").write_text(json.dumps({"precedents": precedents}))
+        (tmp_path / "precedents.json").write_text(
+            json.dumps({"precedents": precedents})
+        )
 
         results = run_precedent_checks(scope="both")
         assert len(results["warning"]) == 1
         assert "error message" in results["warning"][0]["output"]
 
-    def test_run_precedent_checks_scope_both_filters_all(self, tmp_path, monkeypatch) -> None:
+    def test_run_precedent_checks_scope_both_filters_all(
+        self, tmp_path, monkeypatch
+    ) -> None:
         """Test that scope='both' includes all precedents regardless of their scope."""
         monkeypatch.setattr(
             "claude_quality.precedents._PRECEDENTS_FILE",
@@ -463,7 +491,9 @@ class TestRunPrecedentChecks:
                 "hits": 0,
             },
         ]
-        (tmp_path / "precedents.json").write_text(json.dumps({"precedents": precedents}))
+        (tmp_path / "precedents.json").write_text(
+            json.dumps({"precedents": precedents})
+        )
 
         # With scope='both', both should be checked
         results = run_precedent_checks(scope="both")

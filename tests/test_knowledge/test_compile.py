@@ -3,7 +3,6 @@
 import pytest
 from pathlib import Path
 import json
-import shutil
 
 from claude_knowledge.compile import _extract_entries, compile_logs
 
@@ -64,7 +63,9 @@ Some trailing content"""
 class TestCompileLogs:
     """Test compile_logs function."""
 
-    def test_basic_compilation(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_basic_compilation(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test basic daily log compilation."""
         # Create daily directory with a log file
         daily_dir = tmp_path / "daily"
@@ -91,7 +92,9 @@ class TestCompileLogs:
         articles_dir = mock_kb_dir / "articles"
         assert articles_dir.exists()
 
-    def test_compilation_creates_article(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_compilation_creates_article(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that compilation creates article file."""
         daily_dir = tmp_path / "daily"
         daily_dir.mkdir()
@@ -114,7 +117,9 @@ class TestCompileLogs:
         assert len(data["entries"]) == 1
         assert "compiled_at" in data
 
-    def test_empty_daily_log_ignored(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_empty_daily_log_ignored(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that empty daily logs are ignored."""
         daily_dir = tmp_path / "daily"
         daily_dir.mkdir()
@@ -130,7 +135,9 @@ class TestCompileLogs:
 
         assert result["compiled"] == 1
 
-    def test_multiple_daily_logs(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_multiple_daily_logs(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test compilation of multiple daily logs."""
         daily_dir = tmp_path / "daily"
         daily_dir.mkdir()
@@ -147,7 +154,9 @@ class TestCompileLogs:
 
         assert result["compiled"] == 3
 
-    def test_state_persistence(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_state_persistence(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that compile state is persisted."""
         daily_dir = tmp_path / "daily"
         daily_dir.mkdir()
@@ -165,7 +174,9 @@ class TestCompileLogs:
         state = json.loads(state_file.read_text())
         assert "2024-01-15" in state
 
-    def test_dry_run_no_state_write(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_dry_run_no_state_write(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that dry_run doesn't write state file."""
         daily_dir = tmp_path / "daily"
         daily_dir.mkdir()
@@ -182,7 +193,9 @@ class TestCompileLogs:
         state_file = mock_kb_dir / "compile_state.json"
         assert not state_file.exists()
 
-    def test_no_daily_logs(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_no_daily_logs(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test when no daily logs exist."""
         daily_dir = tmp_path / "daily"
         daily_dir.mkdir()

@@ -188,9 +188,7 @@ def test_validate_work_item_empty_dict() -> None:
 
 def test_validate_work_item_valid_minimal() -> None:
     """Test validation of minimal valid work item."""
-    errors = validate_work_item(
-        {"task_id": "t-1", "subject": "Test subject"}
-    )
+    errors = validate_work_item({"task_id": "t-1", "subject": "Test subject"})
     assert errors == []
 
 

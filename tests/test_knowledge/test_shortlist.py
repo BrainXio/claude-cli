@@ -16,7 +16,9 @@ class TestGetShortlist:
         result = get_shortlist(tmp_path / "nonexistent.json")
         assert result == []
 
-    def test_empty_shortlist_from_kb_dir(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_empty_shortlist_from_kb_dir(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test getting shortlist from KNOWLEDGE_DIR when file doesn't exist."""
         mock_kb_dir = tmp_path / "knowledge"
         mock_kb_dir.mkdir()
@@ -136,7 +138,9 @@ class TestUpdateShortlist:
         assert shortlist_file.exists()
         assert shortlist_file.parent.exists()
 
-    def test_default_to_kb_dir(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_default_to_kb_dir(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that default path uses KNOWLEDGE_DIR."""
         mock_kb_dir = tmp_path / "knowledge"
         mock_kb_dir.mkdir()

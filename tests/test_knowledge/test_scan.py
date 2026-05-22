@@ -1,6 +1,5 @@
 """Tests for claude_knowledge.scan."""
 
-import pytest
 from pathlib import Path
 import json
 

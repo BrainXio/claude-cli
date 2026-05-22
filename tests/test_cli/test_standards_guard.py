@@ -1,4 +1,5 @@
 """Tests for claude_cli.standards_guard."""
+
 import io
 import json
 import sys
@@ -113,7 +114,16 @@ def test_check_workflow_content_curl_sudo():
 def test_main_valid_json_no_file_path(capsys: pytest.CaptureFixture) -> None:
     from claude_cli.standards_guard import main
 
-    with patch.object(sys, "stdin", _stdin({"tool_name": "Edit", "tool_input": {"file_path": "", "new_string": "content"}})):
+    with patch.object(
+        sys,
+        "stdin",
+        _stdin(
+            {
+                "tool_name": "Edit",
+                "tool_input": {"file_path": "", "new_string": "content"},
+            }
+        ),
+    ):
         main()
     captured = capsys.readouterr()
     assert captured.out == ""
@@ -122,10 +132,19 @@ def test_main_valid_json_no_file_path(capsys: pytest.CaptureFixture) -> None:
 def test_main_valid_json_allowed_repo(capsys: pytest.CaptureFixture) -> None:
     from claude_cli.standards_guard import main
 
-    with patch.object(sys, "stdin", _stdin({
-        "tool_name": "Edit",
-        "tool_input": {"file_path": ".github/README.md", "new_string": "https://github.com/brainxio/tools is allowed"}
-    })):
+    with patch.object(
+        sys,
+        "stdin",
+        _stdin(
+            {
+                "tool_name": "Edit",
+                "tool_input": {
+                    "file_path": ".github/README.md",
+                    "new_string": "https://github.com/brainxio/tools is allowed",
+                },
+            }
+        ),
+    ):
         main()
     captured = capsys.readouterr()
     assert captured.out == ""
@@ -134,13 +153,19 @@ def test_main_valid_json_allowed_repo(capsys: pytest.CaptureFixture) -> None:
 def test_main_valid_json_workflow(capsys: pytest.CaptureFixture) -> None:
     from claude_cli.standards_guard import main
 
-    with patch.object(sys, "stdin", _stdin({
-        "tool_name": "Write",
-        "tool_input": {
-            "file_path": ".github/workflows/test.yml",
-            "content": "jobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4"
-        }
-    })):
+    with patch.object(
+        sys,
+        "stdin",
+        _stdin(
+            {
+                "tool_name": "Write",
+                "tool_input": {
+                    "file_path": ".github/workflows/test.yml",
+                    "content": "jobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v4",
+                },
+            }
+        ),
+    ):
         main()
     captured = capsys.readouterr()
     assert captured.out == ""
@@ -171,10 +196,19 @@ def test_main_eof_error(capsys: pytest.CaptureFixture) -> None:
 def test_main_edit_tool(capsys: pytest.CaptureFixture) -> None:
     from claude_cli.standards_guard import main
 
-    with patch.object(sys, "stdin", _stdin({
-        "tool_name": "Edit",
-        "tool_input": {"file_path": ".github/README.md", "new_string": "local-first is forbidden"}
-    })):
+    with patch.object(
+        sys,
+        "stdin",
+        _stdin(
+            {
+                "tool_name": "Edit",
+                "tool_input": {
+                    "file_path": ".github/README.md",
+                    "new_string": "local-first is forbidden",
+                },
+            }
+        ),
+    ):
         main()
     captured = capsys.readouterr()
     assert "deny" in captured.out
@@ -184,10 +218,19 @@ def test_main_edit_tool(capsys: pytest.CaptureFixture) -> None:
 def test_main_write_tool(capsys: pytest.CaptureFixture) -> None:
     from claude_cli.standards_guard import main
 
-    with patch.object(sys, "stdin", _stdin({
-        "tool_name": "Write",
-        "tool_input": {"file_path": "CONTRIBUTING.md", "content": "sacred is forbidden"}
-    })):
+    with patch.object(
+        sys,
+        "stdin",
+        _stdin(
+            {
+                "tool_name": "Write",
+                "tool_input": {
+                    "file_path": "CONTRIBUTING.md",
+                    "content": "sacred is forbidden",
+                },
+            }
+        ),
+    ):
         main()
     captured = capsys.readouterr()
     assert "deny" in captured.out
@@ -197,10 +240,11 @@ def test_main_write_tool(capsys: pytest.CaptureFixture) -> None:
 def test_main_unsupported_tool(capsys: pytest.CaptureFixture) -> None:
     from claude_cli.standards_guard import main
 
-    with patch.object(sys, "stdin", _stdin({
-        "tool_name": "Read",
-        "tool_input": {"file_path": "README.md"}
-    })):
+    with patch.object(
+        sys,
+        "stdin",
+        _stdin({"tool_name": "Read", "tool_input": {"file_path": "README.md"}}),
+    ):
         main()
     captured = capsys.readouterr()
     assert captured.out == ""
@@ -209,10 +253,16 @@ def test_main_unsupported_tool(capsys: pytest.CaptureFixture) -> None:
 def test_main_no_content(capsys: pytest.CaptureFixture) -> None:
     from claude_cli.standards_guard import main
 
-    with patch.object(sys, "stdin", _stdin({
-        "tool_name": "Edit",
-        "tool_input": {"file_path": "README.md", "new_string": ""}
-    })):
+    with patch.object(
+        sys,
+        "stdin",
+        _stdin(
+            {
+                "tool_name": "Edit",
+                "tool_input": {"file_path": "README.md", "new_string": ""},
+            }
+        ),
+    ):
         main()
     captured = capsys.readouterr()
     assert captured.out == ""
@@ -221,13 +271,19 @@ def test_main_no_content(capsys: pytest.CaptureFixture) -> None:
 def test_main_violation_count_truncation(capsys: pytest.CaptureFixture) -> None:
     from claude_cli.standards_guard import main
 
-    with patch.object(sys, "stdin", _stdin({
-        "tool_name": "Write",
-        "tool_input": {
-            "file_path": ".github/README.md",
-            "content": "local-first\nquiet joy\nsacred\nCore approval\nAnother Intelligence\nsovereign AI"
-        }
-    })):
+    with patch.object(
+        sys,
+        "stdin",
+        _stdin(
+            {
+                "tool_name": "Write",
+                "tool_input": {
+                    "file_path": ".github/README.md",
+                    "content": "local-first\nquiet joy\nsacred\nCore approval\nAnother Intelligence\nsovereign AI",
+                },
+            }
+        ),
+    ):
         main()
     captured = capsys.readouterr()
     assert "and 1 more" in captured.out

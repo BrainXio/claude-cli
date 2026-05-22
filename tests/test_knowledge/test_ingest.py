@@ -90,7 +90,9 @@ Body content here"""
 class TestIngestDir:
     """Test ingest_dir function."""
 
-    def test_basic_ingestion(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_basic_ingestion(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test basic markdown file ingestion."""
         source_dir = tmp_path / "source"
         source_dir.mkdir()
@@ -98,7 +100,9 @@ class TestIngestDir:
 
         mock_kb_dir = tmp_path / "knowledge"
         mock_kb_dir.mkdir()
-        monkeypatch.setattr("claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir)
+        monkeypatch.setattr(
+            "claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir
+        )
 
         result = ingest_dir(source_dir, dry_run=True)
 
@@ -111,7 +115,9 @@ class TestIngestDir:
         artifact_files = list(artifacts_dir.glob("*.json"))
         assert len(artifact_files) == 1
 
-    def test_ingestion_with_frontmatter(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_ingestion_with_frontmatter(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test markdown file with frontmatter ingestion."""
         source_dir = tmp_path / "source"
         source_dir.mkdir()
@@ -126,7 +132,9 @@ Some text here.""")
 
         mock_kb_dir = tmp_path / "knowledge"
         mock_kb_dir.mkdir()
-        monkeypatch.setattr("claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir)
+        monkeypatch.setattr(
+            "claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir
+        )
 
         result = ingest_dir(source_dir, dry_run=True)
 
@@ -138,14 +146,18 @@ Some text here.""")
         assert data["meta"]["title"] == "My Article"
         assert "# Article Content" in data["body"]
 
-    def test_no_files_to_ingest(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_no_files_to_ingest(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test ingestion when source directory is empty."""
         source_dir = tmp_path / "source"
         source_dir.mkdir()
 
         mock_kb_dir = tmp_path / "knowledge"
         mock_kb_dir.mkdir()
-        monkeypatch.setattr("claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir)
+        monkeypatch.setattr(
+            "claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir
+        )
 
         result = ingest_dir(source_dir, dry_run=True)
 
@@ -153,7 +165,9 @@ Some text here.""")
         assert result["unchanged"] == 0
         assert result["errors"] == []
 
-    def test_chained_ingestion_unchanged(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_chained_ingestion_unchanged(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that re-ingestion of unchanged files returns unchanged count."""
         source_dir = tmp_path / "source"
         source_dir.mkdir()
@@ -161,7 +175,9 @@ Some text here.""")
 
         mock_kb_dir = tmp_path / "knowledge"
         mock_kb_dir.mkdir()
-        monkeypatch.setattr("claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir)
+        monkeypatch.setattr(
+            "claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir
+        )
 
         result1 = ingest_dir(source_dir)
         assert result1["ingested"] == 1
@@ -170,7 +186,9 @@ Some text here.""")
         assert result2["unchanged"] == 1
         assert result2["ingested"] == 0
 
-    def test_force_all_ignores_state(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_force_all_ignores_state(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test force_all flag re-ingests all files."""
         source_dir = tmp_path / "source"
         source_dir.mkdir()
@@ -178,7 +196,9 @@ Some text here.""")
 
         mock_kb_dir = tmp_path / "knowledge"
         mock_kb_dir.mkdir()
-        monkeypatch.setattr("claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir)
+        monkeypatch.setattr(
+            "claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir
+        )
 
         result1 = ingest_dir(source_dir)
         assert result1["ingested"] == 1
@@ -187,7 +207,9 @@ Some text here.""")
         assert result2["ingested"] == 1
         assert result2["unchanged"] == 0
 
-    def test_state_persistence(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_state_persistence(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that state is persisted to state.json."""
         source_dir = tmp_path / "source"
         source_dir.mkdir()
@@ -196,7 +218,9 @@ Some text here.""")
 
         mock_kb_dir = tmp_path / "knowledge"
         mock_kb_dir.mkdir()
-        monkeypatch.setattr("claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir)
+        monkeypatch.setattr(
+            "claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir
+        )
 
         ingest_dir(source_dir)
 
@@ -206,7 +230,9 @@ Some text here.""")
         assert "test1.md" in state
         assert "test2.md" in state
 
-    def test_nested_directory_ingestion(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_nested_directory_ingestion(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test ingestion of files in subdirectories."""
         source_dir = tmp_path / "source"
         source_dir.mkdir()
@@ -217,13 +243,17 @@ Some text here.""")
 
         mock_kb_dir = tmp_path / "knowledge"
         mock_kb_dir.mkdir()
-        monkeypatch.setattr("claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir)
+        monkeypatch.setattr(
+            "claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir
+        )
 
         result = ingest_dir(source_dir, dry_run=True)
 
         assert result["ingested"] == 2
 
-    def test_non_markdown_files_ignored(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_non_markdown_files_ignored(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that non-markdown files are not ingested."""
         source_dir = tmp_path / "source"
         source_dir.mkdir()
@@ -232,13 +262,17 @@ Some text here.""")
 
         mock_kb_dir = tmp_path / "knowledge"
         mock_kb_dir.mkdir()
-        monkeypatch.setattr("claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir)
+        monkeypatch.setattr(
+            "claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir
+        )
 
         result = ingest_dir(source_dir, dry_run=True)
 
         assert result["ingested"] == 1
 
-    def test_os_error_handling(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_os_error_handling(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test error handling when file read fails."""
         source_dir = tmp_path / "source"
         source_dir.mkdir()
@@ -247,7 +281,9 @@ Some text here.""")
 
         mock_kb_dir = tmp_path / "knowledge"
         mock_kb_dir.mkdir()
-        monkeypatch.setattr("claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir)
+        monkeypatch.setattr(
+            "claude_knowledge.ingest.get_knowledge_dir", lambda: mock_kb_dir
+        )
 
         test_file.chmod(0o000)
 

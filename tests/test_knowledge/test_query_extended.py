@@ -3,9 +3,7 @@
 import pytest
 from pathlib import Path
 import json
-import shutil
 
-from claude_knowledge._config import KNOWLEDGE_DIR
 from claude_knowledge.query import _cosine_similarity, query_kb
 
 
@@ -77,7 +75,9 @@ class TestQueryKb:
         results = query_kb("test query")
         assert results == []
 
-    def test_no_articles_in_kb(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_no_articles_in_kb(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test querying when articles directory doesn't exist."""
         mock_kb_dir = tmp_path / "knowledge"
         monkeypatch.setattr("claude_knowledge.query.KNOWLEDGE_DIR", mock_kb_dir)
@@ -85,7 +85,9 @@ class TestQueryKb:
         results = query_kb("test query")
         assert results == []
 
-    def test_single_article_match(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_single_article_match(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test finding a single matching article."""
         mock_kb_dir = tmp_path / "knowledge"
         articles_dir = mock_kb_dir / "articles"
@@ -93,9 +95,11 @@ class TestQueryKb:
 
         # Create a matching article
         article = articles_dir / "test-article.json"
-        article.write_text(json.dumps({
-            "entries": [{"body": "This is a test article about machine learning"}]
-        }))
+        article.write_text(
+            json.dumps(
+                {"entries": [{"body": "This is a test article about machine learning"}]}
+            )
+        )
 
         monkeypatch.setattr("claude_knowledge.query.KNOWLEDGE_DIR", mock_kb_dir)
 
@@ -104,19 +108,23 @@ class TestQueryKb:
         assert "test-article.json" in results[0]["source"]
         assert results[0]["score"] > 0
 
-    def test_multiple_articles_ranked(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_multiple_articles_ranked(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that multiple articles are ranked by score."""
         mock_kb_dir = tmp_path / "knowledge"
         articles_dir = mock_kb_dir / "articles"
         articles_dir.mkdir(parents=True)
 
         # Create articles with different relevance
-        (articles_dir / "article1.json").write_text(json.dumps({
-            "entries": [{"body": "Python programming language"}]
-        }))
-        (articles_dir / "article2.json").write_text(json.dumps({
-            "entries": [{"body": "Python programming language for data science"}]
-        }))
+        (articles_dir / "article1.json").write_text(
+            json.dumps({"entries": [{"body": "Python programming language"}]})
+        )
+        (articles_dir / "article2.json").write_text(
+            json.dumps(
+                {"entries": [{"body": "Python programming language for data science"}]}
+            )
+        )
 
         monkeypatch.setattr("claude_knowledge.query.KNOWLEDGE_DIR", mock_kb_dir)
 
@@ -133,24 +141,26 @@ class TestQueryKb:
 
         # Create 5 articles
         for i in range(5):
-            (articles_dir / f"article{i}.json").write_text(json.dumps({
-                "entries": [{"body": f"Article {i} about topic"}]
-            }))
+            (articles_dir / f"article{i}.json").write_text(
+                json.dumps({"entries": [{"body": f"Article {i} about topic"}]})
+            )
 
         monkeypatch.setattr("claude_knowledge.query.KNOWLEDGE_DIR", mock_kb_dir)
 
         results = query_kb("topic", top_k=2)
         assert len(results) == 2
 
-    def test_no_match_returns_empty(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_no_match_returns_empty(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test query with no matching terms."""
         mock_kb_dir = tmp_path / "knowledge"
         articles_dir = mock_kb_dir / "articles"
         articles_dir.mkdir(parents=True)
 
-        (articles_dir / "article.json").write_text(json.dumps({
-            "entries": [{"body": "Some completely unrelated content"}]
-        }))
+        (articles_dir / "article.json").write_text(
+            json.dumps({"entries": [{"body": "Some completely unrelated content"}]})
+        )
 
         monkeypatch.setattr("claude_knowledge.query.KNOWLEDGE_DIR", mock_kb_dir)
 
@@ -159,16 +169,18 @@ class TestQueryKb:
         # Should return empty since there's no match
         assert results == []
 
-    def test_invalid_article_handling(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_invalid_article_handling(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test handling of corrupted article files."""
         mock_kb_dir = tmp_path / "knowledge"
         articles_dir = mock_kb_dir / "articles"
         articles_dir.mkdir(parents=True)
 
         # Valid article
-        (articles_dir / "valid.json").write_text(json.dumps({
-            "entries": [{"body": "Valid content"}]
-        }))
+        (articles_dir / "valid.json").write_text(
+            json.dumps({"entries": [{"body": "Valid content"}]})
+        )
 
         # Invalid/corrupted article
         (articles_dir / "invalid.json").write_text("not valid json")
@@ -179,7 +191,9 @@ class TestQueryKb:
         # Should handle invalid file gracefully
         assert len(results) == 1
 
-    def test_version_filtering(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_version_filtering(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test min_version and max_version filtering.
 
         Note: The current query_kb doesn't actually filter by version.
@@ -191,10 +205,9 @@ class TestQueryKb:
 
         # Create an article with version metadata in content
         article = articles_dir / "test.json"
-        article.write_text(json.dumps({
-            "version": 2,
-            "entries": [{"body": "Test content"}]
-        }))
+        article.write_text(
+            json.dumps({"version": 2, "entries": [{"body": "Test content"}]})
+        )
 
         monkeypatch.setattr("claude_knowledge.query.KNOWLEDGE_DIR", mock_kb_dir)
 
@@ -204,15 +217,25 @@ class TestQueryKb:
         # Since version filtering is not implemented, we just verify the filter doesn't crash
         assert isinstance(results, list)
 
-    def test_excerpt_generation(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    def test_excerpt_generation(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Test that excerpts are generated correctly."""
         mock_kb_dir = tmp_path / "knowledge"
         articles_dir = mock_kb_dir / "articles"
         articles_dir.mkdir(parents=True)
 
-        (articles_dir / "test.json").write_text(json.dumps({
-            "entries": [{"body": "Very long content that should be truncated in the excerpt"}]
-        }))
+        (articles_dir / "test.json").write_text(
+            json.dumps(
+                {
+                    "entries": [
+                        {
+                            "body": "Very long content that should be truncated in the excerpt"
+                        }
+                    ]
+                }
+            )
+        )
 
         monkeypatch.setattr("claude_knowledge.query.KNOWLEDGE_DIR", mock_kb_dir)
 

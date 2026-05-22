@@ -1,9 +1,9 @@
 """Tests for claude_cli._utils."""
+
 import sys
 import json
-import subprocess
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 sys.path.insert(0, "/home/mister-robot/workspace/claude-cli/src")
 
@@ -11,6 +11,7 @@ sys.path.insert(0, "/home/mister-robot/workspace/claude-cli/src")
 def test_extract_conversation_context_basic():
     """Test extract_conversation_context with basic input."""
     from claude_cli._utils import extract_conversation_context
+
     transcript = Path("/tmp/test.jsonl")
     transcript.write_text(
         '{"message": {"role": "user", "content": "Hello"}}\n'
@@ -28,6 +29,7 @@ def test_extract_conversation_context_basic():
 def test_extract_conversation_context_empty():
     """Test extract_conversation_context with empty file."""
     from claude_cli._utils import extract_conversation_context
+
     transcript = Path("/tmp/test.jsonl")
     transcript.write_text("")
     try:
@@ -41,6 +43,7 @@ def test_extract_conversation_context_empty():
 def test_extract_conversation_context_invalid_lines():
     """Test extract_conversation_context with invalid JSON lines."""
     from claude_cli._utils import extract_conversation_context
+
     transcript = Path("/tmp/test.jsonl")
     transcript.write_text(
         "not valid json\n"
@@ -58,6 +61,7 @@ def test_extract_conversation_context_invalid_lines():
 def test_extract_conversation_context_filter_roles():
     """Test extract_conversation_context filters to user/assistant only."""
     from claude_cli._utils import extract_conversation_context
+
     transcript = Path("/tmp/test.jsonl")
     transcript.write_text(
         '{"message": {"role": "system", "content": "System message"}}\n'
@@ -79,6 +83,7 @@ def test_extract_conversation_context_filter_roles():
 def test_extract_conversation_context_list_content():
     """Test extract_conversation_context handles list content."""
     from claude_cli._utils import extract_conversation_context
+
     transcript = Path("/tmp/test.jsonl")
     transcript.write_text(
         '{"message": {"role": "user", "content": [{"type": "text", "text": "Hello"}]}}\n'
@@ -94,6 +99,7 @@ def test_extract_conversation_context_list_content():
 def test_extract_conversation_context_max_turns():
     """Test extract_conversation_context respects max_turns."""
     from claude_cli._utils import extract_conversation_context
+
     transcript = Path("/tmp/test.jsonl")
     transcript.write_text(
         '{"message": {"role": "user", "content": "Turn 1"}}\n'
@@ -114,6 +120,7 @@ def test_extract_conversation_context_max_turns():
 def test_extract_conversation_context_max_chars():
     """Test extract_conversation_context respects max_chars."""
     from claude_cli._utils import extract_conversation_context
+
     transcript = Path("/tmp/test.jsonl")
     long_content = "a" * 1000
     transcript.write_text(
@@ -131,6 +138,7 @@ def test_extract_conversation_context_max_chars():
 def test_parse_stdin_json_success():
     """Test parse_stdin_json with valid JSON."""
     from claude_cli._utils import parse_stdin_json
+
     test_data = {"key": "value", "number": 42}
     with patch("sys.stdin") as mock_stdin:
         mock_stdin.read.return_value = json.dumps(test_data)
@@ -141,6 +149,7 @@ def test_parse_stdin_json_success():
 def test_parse_stdin_json_empty():
     """Test parse_stdin_json with empty string."""
     from claude_cli._utils import parse_stdin_json
+
     with patch("sys.stdin") as mock_stdin:
         mock_stdin.read.return_value = ""
         result = parse_stdin_json()
@@ -150,6 +159,7 @@ def test_parse_stdin_json_empty():
 def test_parse_stdin_json_invalid():
     """Test parse_stdin_json with invalid JSON."""
     from claude_cli._utils import parse_stdin_json
+
     with patch("sys.stdin") as mock_stdin:
         mock_stdin.read.return_value = "not valid json"
         result = parse_stdin_json()
@@ -159,6 +169,7 @@ def test_parse_stdin_json_invalid():
 def test_parse_stdin_json_whitespace():
     """Test parse_stdin_json with whitespace only."""
     from claude_cli._utils import parse_stdin_json
+
     with patch("sys.stdin") as mock_stdin:
         mock_stdin.read.return_value = "   "
         result = parse_stdin_json()
@@ -168,6 +179,7 @@ def test_parse_stdin_json_whitespace():
 def test_spawn_detached_linux():
     """Test spawn_detached with Linux platform."""
     from claude_cli._utils import spawn_detached
+
     with patch("subprocess.Popen") as mock_popen:
         with patch("sys.platform", "linux"):
             spawn_detached(["echo", "test"], cwd="/tmp")
@@ -179,6 +191,7 @@ def test_spawn_detached_linux():
 def test_spawn_detached_with_log_path():
     """Test spawn_detached with log path."""
     from claude_cli._utils import spawn_detached
+
     log_path = Path("/tmp/test.log")
     with patch("builtins.open") as mock_open:
         with patch("subprocess.Popen") as mock_popen:

@@ -1,9 +1,8 @@
 """Tests for claude_quality.gate - quality gate enforcement."""
 
 import subprocess
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
 
 from claude_quality.gate import run_ci_gate, run_quality_gate
 
@@ -29,7 +28,9 @@ class TestRunQualityGate:
         monkeypatch.setattr(
             subprocess,
             "run",
-            lambda *args, **kwargs: (_ for _ in ()).throw(subprocess.CalledProcessError(1, ["gitleaks"])),
+            lambda *args, **kwargs: (_ for _ in ()).throw(
+                subprocess.CalledProcessError(1, ["gitleaks"])
+            ),
         )
 
         results = run_quality_gate(fast=True)
@@ -51,7 +52,9 @@ class TestRunQualityGate:
         monkeypatch.setattr(
             subprocess,
             "run",
-            lambda *args, **kwargs: (_ for _ in ()).throw(subprocess.TimeoutExpired("timeout", None)),
+            lambda *args, **kwargs: (_ for _ in ()).throw(
+                subprocess.TimeoutExpired("timeout", None)
+            ),
         )
 
         results = run_quality_gate(fast=True)
@@ -76,7 +79,9 @@ class TestRunQualityGate:
         monkeypatch.setattr(
             subprocess,
             "run",
-            lambda *args, **kwargs: (_ for _ in ()).throw(subprocess.CalledProcessError(1, ["ruff"])),
+            lambda *args, **kwargs: (_ for _ in ()).throw(
+                subprocess.CalledProcessError(1, ["ruff"])
+            ),
         )
 
         results = run_quality_gate(files=["test.py"], fast=True)
@@ -100,7 +105,9 @@ class TestRunQualityGate:
         monkeypatch.setattr(
             subprocess,
             "run",
-            lambda *args, **kwargs: (_ for _ in ()).throw(subprocess.CalledProcessError(1, ["mypy"])),
+            lambda *args, **kwargs: (_ for _ in ()).throw(
+                subprocess.CalledProcessError(1, ["mypy"])
+            ),
         )
 
         results = run_quality_gate(fast=False)
@@ -292,7 +299,9 @@ class TestRunCiGate:
         monkeypatch.setattr(
             subprocess,
             "run",
-            lambda *args, **kwargs: (_ for _ in ()).throw(subprocess.TimeoutExpired("timeout", None)),
+            lambda *args, **kwargs: (_ for _ in ()).throw(
+                subprocess.TimeoutExpired("timeout", None)
+            ),
         )
 
         results = run_ci_gate()
