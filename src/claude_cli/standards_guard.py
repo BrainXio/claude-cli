@@ -10,6 +10,8 @@ import json
 import re
 import sys
 
+from claude_cli._config import get_allowed_repos
+
 # --- Forbidden patterns ---
 
 PHILOSOPHY_SLUDGE = [
@@ -56,16 +58,6 @@ MANIFESTO_TONE = [
     ),
 ]
 
-ALLOWED_REPOS = {
-    "BrainXio/.claude",
-    "BrainXio/.agents",
-    "BrainXio/.ollama",
-    "BrainXio/.containers",
-    "BrainXio/workflows",
-    "BrainXio/tools",
-    "BrainXio/.github",
-}
-
 PHANTOM_REPO_RE = re.compile(
     r"https?://github\.com/([^\s\)\]/]+/[^\s\)\]]+)", re.IGNORECASE
 )
@@ -107,10 +99,11 @@ def check_content(content: str, file_path: str) -> list[str]:
                 violations.append(f"L{i}: {reason} — found: '{line.strip()}'")
 
     # Phantom repo links
+    allowed = get_allowed_repos()
     for i, line in enumerate(lines, 1):
         for match in PHANTOM_REPO_RE.finditer(line):
             repo = match.group(1)
-            if repo not in ALLOWED_REPOS:
+            if repo not in allowed:
                 violations.append(
                     f"L{i}: phantom repo link: '{repo}' — not in verified repo list"
                 )

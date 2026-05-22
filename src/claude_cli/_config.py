@@ -32,6 +32,10 @@ REPORTS_TMP = REPORTS_DIR / "tmp"
 ROOT_DIR = Path("~/.claude").expanduser().resolve()
 
 
+def get_allowed_repos() -> set[str]:
+    return set()  # empty default for open source
+
+
 def now() -> datetime:
     return datetime.now().astimezone()
 

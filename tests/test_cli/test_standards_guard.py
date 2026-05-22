@@ -68,8 +68,13 @@ def test_check_content_manifesto_tone():
     assert "managed exclusively through" in violations[0]
 
 
-def test_check_content_phantom_repo():
+def test_check_content_phantom_repo(monkeypatch):
     from claude_cli.standards_guard import check_content
+
+    monkeypatch.setattr(
+        "claude_cli.standards_guard.get_allowed_repos",
+        lambda: {"BrainXio/tools"},
+    )
 
     content = (
         "See https://github.com/BrainXio/tools for more info.\n"
@@ -129,8 +134,15 @@ def test_main_valid_json_no_file_path(capsys: pytest.CaptureFixture) -> None:
     assert captured.out == ""
 
 
-def test_main_valid_json_allowed_repo(capsys: pytest.CaptureFixture) -> None:
+def test_main_valid_json_allowed_repo(
+    capsys: pytest.CaptureFixture, monkeypatch
+) -> None:
     from claude_cli.standards_guard import main
+
+    monkeypatch.setattr(
+        "claude_cli.standards_guard.get_allowed_repos",
+        lambda: {"BrainXio/tools"},
+    )
 
     with patch.object(
         sys,
