@@ -14,6 +14,8 @@ import json
 import os
 import subprocess
 import urllib.request
+from typing import Any
+
 
 STATE_FILE = os.path.expanduser("~/.brainxio/data/state.json")
 CAP_FILE = os.path.expanduser("~/.brainxio/data/model-capabilities.json")
@@ -47,13 +49,16 @@ MODEL_ENV_VARS = [
 ]
 
 
-def get_active_model():
+def get_active_model() -> str | None:
     """Extract the active model identifier from state.json."""
     if not os.path.exists(STATE_FILE):
         return None
     with open(STATE_FILE) as f:
         state = json.load(f)
     mode_str = state.get("mode", {}).get("string", "")
+    mode_str = mode_str if isinstance(mode_str, str) else None
+    if mode_str is None:
+        return None
     # "Ollama-Cloud:deepseek-v4-pro:cloud" -> "deepseek-v4-pro:cloud"
     parts = mode_str.split(":")
     if len(parts) >= 3 and parts[0] == "Ollama-Cloud":
@@ -61,17 +66,17 @@ def get_active_model():
     return mode_str
 
 
-def ollama_tags():
+def ollama_tags() -> list[dict[str, Any]]:
     """Return list of models from Ollama /api/tags."""
     try:
         req = urllib.request.Request(f"{OLLAMA_URL}/api/tags")
         with urllib.request.urlopen(req, timeout=10) as resp:
-            return json.loads(resp.read()).get("models", [])
+            return json.loads(resp.read()).get("models", [])  # type: ignore
     except Exception:
         return []
 
 
-def ollama_show(model_name):
+def ollama_show(model_name: str) -> tuple[str, bool]:
     """Run 'ollama show <model>' and return stdout text."""
     result = subprocess.run(
         ["ollama", "show", model_name],
@@ -82,7 +87,7 @@ def ollama_show(model_name):
     return result.stdout, result.returncode == 0
 
 
-def has_vision_capability(stdout):
+def has_vision_capability(stdout: str) -> bool:
     """Check if ollama show output contains 'vision' in the Capabilities block."""
     in_caps = False
     for line in stdout.splitlines():
@@ -98,7 +103,7 @@ def has_vision_capability(stdout):
     return False
 
 
-def check_model_vision(model_id):
+def check_model_vision(model_id: str | None) -> tuple[bool | None, str | None]:
     """Return (vision: bool|None, matched_model_name)."""
     if not model_id:
         return None, None
@@ -133,7 +138,7 @@ def check_model_vision(model_id):
     return None, None
 
 
-def main():
+def main() -> None:
     results = {}
     checked_models = set()
 

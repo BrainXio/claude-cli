@@ -38,7 +38,7 @@ You are an extension of the main orchestrating session, NOT an independent agent
 
 ## Output Format
 
-```text
+````text
 ## Documentation Summary
 
 - **Files created**: [list]
@@ -68,3 +68,4 @@ You are an extension of the main orchestrating session, NOT an independent agent
 
 - [recommended next steps: review, publish, update index]
 ```text
+````

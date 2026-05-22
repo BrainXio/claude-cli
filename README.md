@@ -11,7 +11,7 @@ uvx --from git+https://github.com/BrainXio/claude-cli.git claude-bootstrap
 ## Commands
 
 | Command | Purpose |
-| --- | --- |
+| --------------------------- | -------------------------------------------- |
 | `claude-bootstrap` | Session bootstrap (bus, KB engine setup) |
 | `claude-session-start` | Session start hook (model capability detect) |
 | `claude-session-end` | Session end hook (cleanup, summary) |
