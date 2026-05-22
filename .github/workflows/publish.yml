@@ -3,6 +3,11 @@ on:
   push:
     tags: ["v*"]
 
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
 jobs:
   pypi-publish:
     uses: BrainXio/cicd/.github/workflows/publish-pypa.yml@v1
