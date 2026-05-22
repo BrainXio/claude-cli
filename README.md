@@ -118,3 +118,7 @@ uv run mypy src/ --strict  # Type check
 ```
 
 Quality gates: ruff, mypy strict, pytest with 90% coverage threshold.
+
+## Related Projects
+
+- [BrainXio/claude-config](https://github.com/BrainXio/claude-config) — Framework configuration for `.claude/` settings, agents, rules, skills, and workflows. This package is designed to work alongside `claude-config` to provide the full Claude Code extension framework.
