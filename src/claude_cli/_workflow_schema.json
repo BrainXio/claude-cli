@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Claude Workflow",
+  "description": "Minimal structural validation for workflow JSON files consumed by dispatch.py",
+  "type": "object",
+  "required": ["workflow", "stages"],
+  "properties": {
+    "workflow": {
+      "type": "string",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string"
+    },
+    "stages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "agent": {
+            "type": "string"
+          },
+          "gate": {
+            "type": "string"
+          },
+          "fallback": {
+            "type": "string"
+          },
+          "parallel": {
+            "type": "boolean"
+          },
+          "max_concurrent": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "isolation": {
+            "type": "string",
+            "enum": ["none", "worktree", "container"]
+          },
+          "depends_on": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "output": {
+            "type": "string"
+          },
+          "sub_agents": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name"],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "model": {
+                  "type": "string"
+                },
+                "task": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

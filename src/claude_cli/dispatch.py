@@ -6,7 +6,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 
 def _resolve_workflow_dir() -> Path:
@@ -52,7 +52,7 @@ def load_state() -> dict[str, Any]:
     if not STATE_PATH.exists():
         return {}
     with open(STATE_PATH) as f:
-        return json.load(f)  # type: ignore[no-any-return]
+        return cast(dict[str, Any], json.load(f))
 
 
 def get_tier(state: dict[str, Any]) -> int:
@@ -69,13 +69,61 @@ def get_tier(state: dict[str, Any]) -> int:
     return 0
 
 
+def _validate_workflow_structural(data: dict[str, Any]) -> None:
+    """Lightweight structural validation without external dependencies.
+
+    Checks required keys and basic types against _workflow_schema.json.
+    Raises ValueError with a descriptive message on failure.
+    """
+    if not isinstance(data, dict):
+        raise ValueError("Workflow root must be an object")
+    if "workflow" not in data or not isinstance(data["workflow"], str) or not data["workflow"]:
+        raise ValueError("Workflow must have a non-empty 'workflow' string")
+    if "stages" not in data or not isinstance(data["stages"], list):
+        raise ValueError("Workflow must have a 'stages' array")
+
+    stage_names: set[str] = set()
+    for idx, stage in enumerate(data["stages"]):
+        if not isinstance(stage, dict):
+            raise ValueError(f"Stage {idx} must be an object")
+        name = stage.get("name")
+        if not isinstance(name, str) or not name:
+            raise ValueError(f"Stage {idx} must have a non-empty 'name' string")
+        if name in stage_names:
+            raise ValueError(f"Duplicate stage name: '{name}'")
+        stage_names.add(name)
+
+        for key, expected in (
+            ("parallel", bool),
+            ("max_concurrent", int),
+        ):
+            if key in stage and not isinstance(stage[key], expected):
+                raise ValueError(
+                    f"Stage '{name}': '{key}' must be {expected.__name__}, got {type(stage[key]).__name__}"
+                )
+        if "depends_on" in stage:
+            deps = stage["depends_on"]
+            if not isinstance(deps, list) or not all(isinstance(d, str) for d in deps):
+                raise ValueError(f"Stage '{name}': 'depends_on' must be a list of strings")
+        if "isolation" in stage:
+            val = stage["isolation"]
+            if val not in ("none", "worktree", "container"):
+                raise ValueError(f"Stage '{name}': 'isolation' must be one of none|worktree|container")
+
+
 def load_workflow(name: str) -> dict[str, Any]:
     path = WORKFLOW_DIR / f"{name}.json"
     if not path.exists():
         print(f"Workflow '{name}' not found at {path}", file=sys.stderr)
         sys.exit(1)
     with open(path) as f:
-        return json.load(f)  # type: ignore[no-any-return]
+        data: dict[str, Any] = json.load(f)
+    try:
+        _validate_workflow_structural(data)
+    except ValueError as exc:
+        print(f"Workflow '{name}' validation failed: {exc}", file=sys.stderr)
+        sys.exit(1)
+    return data
 
 
 def evaluate_gate(gate: str, tier: int) -> bool:

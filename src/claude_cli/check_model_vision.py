@@ -11,8 +11,9 @@ import datetime
 import json
 import os
 import subprocess
-import urllib.request
 from typing import Any
+
+from ._hook_metrics import fetch_with_backoff, timed_hook
 
 
 STATE_FILE = os.path.expanduser("~/.claude/data/state.json")
@@ -66,9 +67,8 @@ def get_active_model() -> str | None:
 def ollama_tags() -> list[dict[str, Any]]:
     """Return list of models from Ollama /api/tags."""
     try:
-        req = urllib.request.Request(f"{OLLAMA_URL}/api/tags")
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            return json.loads(resp.read()).get("models", [])  # type: ignore
+        body = fetch_with_backoff(f"{OLLAMA_URL}/api/tags", timeout=10)
+        return json.loads(body).get("models", [])  # type: ignore
     except Exception:
         return []
 
@@ -136,6 +136,11 @@ def check_model_vision(model_id: str | None) -> tuple[bool | None, str | None]:
 
 
 def main() -> None:
+    with timed_hook("check_model_vision"):
+        _run_check()
+
+
+def _run_check() -> None:
     results = {}
     checked_models = set()
 

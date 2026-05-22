@@ -1,0 +1,31 @@
+title = "BrainXio Claude CLI Gitleaks Config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Project-specific false positives"
+paths = [
+  '''\.gitleaks\.toml$''',
+  '''tests\/.*\.py$''',
+  '''tests\/.*\.json$''',
+  '''tests\/.*\.yaml$''',
+  '''tests\/.*\.yml$''',
+  '''tests\/.*\.md$''',
+  '''tests\/.*\.txt$''',
+  '''tests\/fixtures\/''',
+  '''test_.*\.py$''',
+]
+
+# Allow test API keys and tokens that are clearly fake/example values
+regexes = [
+  '''sk-test-[a-zA-Z0-9]{24}''',
+  '''ghp_test_[a-zA-Z0-9]{36}''',
+  '''pypi-[a-zA-Z0-9_-]+_test''',
+  '''[a-zA-Z0-9._%+-]+@example\.com''',
+  '''[a-zA-Z0-9._%+-]+@test\.com''',
+  '''[a-zA-Z0-9._%+-]+@localhost''',
+  '''AKIAIOSFODNN7EXAMPLE''',
+  '''wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY''',
+  '''-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEA''',
+]
