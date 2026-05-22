@@ -123,7 +123,7 @@ def check_workflow_content(content: str, file_path: str) -> list[str]:
                 f"L{i}: floating tag detected: use SHA pinning instead — found: '{stripped}'"
             )
         # curl|sudo / curl|bash
-        if re.search(r"curl\s*\|\s*(sudo|bash|sh)", stripped):
+        if re.search(r"curl\b.*\|\s*(sudo|bash|sh)", stripped):
             violations.append(
                 f"L{i}: curl|sudo/bash pattern — supply chain risk — found: '{stripped}'"
             )

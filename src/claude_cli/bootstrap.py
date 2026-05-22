@@ -110,61 +110,19 @@ def _sweep_temp_files(max_age_hours: int = 24) -> None:
 def main() -> None:
     print("Bootstrapping Claude Code agent environment...\n")
 
-    # Identity registration
-    from ._identity import register_bootstrap_session
-
     agent_name = os.environ.get("CLAUDE_AGENT_NAME", "general")
     task = os.environ.get("CLAUDE_AGENT_TASK")
     branch = os.environ.get("CLAUDE_AGENT_BRANCH", "main")
     worktree = os.environ.get("CLAUDE_AGENT_WORKTREE")
-    session_record = register_bootstrap_session(
-        role="helper",  # role no longer hardware-gated; set via env if needed
+
+    from ._bootstrap_identity import register_and_resume, handle_batch
+
+    session_record, resumed_items, migrated_tasks = register_and_resume(
         agent_name=agent_name,
         task=task,
         branch=branch,
-        worktree_path=worktree or None,
+        worktree=worktree,
     )
-
-    # Session resume continuation
-    from ._identity import (
-        list_active_sessions,
-        get_queue_summary,
-        update_session_activity,
-        save_session_record,
-    )
-
-    agent_sessions = [
-        s
-        for s in list_active_sessions()
-        if s["agent_id"] == session_record["agent_id"]
-        and s["session_id"] != session_record["session_id"]
-    ]
-    resumed_items: list[str] = []
-    migrated_tasks = 0
-    for prev in sorted(agent_sessions, key=lambda s: s.get("started_at", "")):
-        summary = get_queue_summary(prev["session_id"])
-        if summary.get("total", 0) > 0:
-            resumed_items.append(
-                f"  Previous session {prev['session_id']}: "
-                f"{summary['total']} queued tasks"
-            )
-            for task_item in prev.get("work_queue", []):
-                if task_item.get("status") == "queued":
-                    from ._identity import push_task_to_queue
-
-                    push_task_to_queue(
-                        session_record["session_id"],
-                        task_item["id"],
-                        task_item["subject"],
-                        task_item.get("description", ""),
-                        task_item.get("priority", 3),
-                        task_item.get("due_by"),
-                    )
-                    migrated_tasks += 1
-        for wi in prev.get("work_items", []):
-            if wi not in session_record["work_items"]:
-                session_record["work_items"].append(wi)
-        update_session_activity(prev["session_id"], status="ended")
 
     if resumed_items:
         print("\n[Work Queue] Resuming from previous sessions:")
@@ -177,15 +135,7 @@ def main() -> None:
     # Batch session execution
     batch_id = os.environ.get("CLAUDE_BATCH_ID")
     if batch_id:
-        from ._identity import mark_batch_executed
-
-        mark_batch_executed(batch_id, session_record["session_id"])
-        print(f"\n[Batch Mode] Executing batch session {batch_id}")
-        task_prompt = os.environ.get("CLAUDE_BATCH_TASK", "")
-        print(f"  Task: {task_prompt[:80]}...")
-        session_record["is_batch"] = True
-        session_record["batch_id"] = batch_id
-        save_session_record(session_record)
+        session_record = handle_batch(batch_id, session_record)
 
     # State persistence
     state = {
