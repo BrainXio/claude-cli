@@ -4,10 +4,7 @@ Reads environment variables (ANTHROPIC_DEFAULT_*_MODEL, CLAUDE_CODE_SUBAGENT_MOD
 and state.json to build a comprehensive capability map. Queries the local Ollama
 instance via `ollama show` and falls back to known vision-capable model families.
 
-Writes the result to ~/.claude/data/model-capabilities.json so agents can
-guard vision tool calls before invoking them.
-
-Intended as a SessionStart hook.
+Outputs JSON to stdout. Intended as a SessionStart hook.
 """
 
 import datetime
@@ -19,7 +16,6 @@ from typing import Any
 
 
 STATE_FILE = os.path.expanduser("~/.claude/data/state.json")
-CAP_FILE = os.path.expanduser("~/.claude/data/model-capabilities.json")
 
 OLLAMA_URL = os.environ.get("ANTHROPIC_BASE_URL", "http://localhost:11434")
 if OLLAMA_URL.endswith("/v1"):
@@ -177,10 +173,6 @@ def main() -> None:
         .isoformat()
         .replace("+00:00", "Z"),
     }
-
-    os.makedirs(os.path.dirname(CAP_FILE), exist_ok=True)
-    with open(CAP_FILE, "w") as f:
-        json.dump(output, f, indent=2)
 
     print(json.dumps(output))
 

@@ -63,38 +63,6 @@ def test_get_active_model_missing_mode():
             assert result is None
 
 
-def test_main_empty_env_vars(tmp_path):
-    """Test main() when no model env vars are set."""
-    from claude_cli import check_model_vision
-
-    cap_file = tmp_path / "model-capabilities.json"
-    with patch.object(check_model_vision, "CAP_FILE", str(cap_file)):
-        with patch.dict(os.environ, {}, clear=True):
-            with patch("os.path.exists", return_value=False):
-                check_model_vision.main()
-                # Should create the cap file
-                assert cap_file.exists()
-
-
-def test_main_active_model_legacy(tmp_path):
-    """Test main() includes __active__ model when state exists."""
-    from claude_cli import check_model_vision
-
-    cap_file = tmp_path / "model-capabilities.json"
-
-    with patch.object(check_model_vision, "CAP_FILE", str(cap_file)):
-        with patch(
-            "claude_cli.check_model_vision.get_active_model",
-            return_value="granite-guardian:latest",
-        ):
-            with patch(
-                "claude_cli.check_model_vision.check_model_vision"
-            ) as mock_check:
-                mock_check.return_value = (None, None)
-                check_model_vision.main()
-                assert cap_file.exists()
-
-
 def test_ollama_tags_success():
     """Test ollama_tags returns models from Ollama API."""
     from claude_cli.check_model_vision import ollama_tags
@@ -212,45 +180,40 @@ def test_check_model_vision_known_remote():
             assert matched == "qwen-vl"
 
 
-def test_main_empty_env_vars_with_active_model_patch(tmp_path):
-    """Test main() when no model env vars are set and no active model."""
-    from claude_cli import check_model_vision
+def test_main_empty_env_vars(capsys):
+    """Test main() outputs JSON to stdout when no env vars are set."""
+    from claude_cli.check_model_vision import main
 
-    cap_file = tmp_path / "model-capabilities.json"
-    with patch.object(check_model_vision, "CAP_FILE", str(cap_file)):
-        with patch.dict(os.environ, {}, clear=True):
-            with patch(
-                "claude_cli.check_model_vision.get_active_model", return_value=None
-            ):
-                check_model_vision.main()
-                # Should create the cap file
-                assert cap_file.exists()
-
-
-def test_main_with_env_var(tmp_path):
-    """Test main() with ANTHROPIC_DEFAULT_SONNET_MODEL set."""
-    from claude_cli import check_model_vision
-
-    cap_file = tmp_path / "model-capabilities.json"
-    with patch.object(check_model_vision, "CAP_FILE", str(cap_file)):
-        with patch.dict(
-            os.environ, {"ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-3-5-sonnet"}
-        ):
-            with patch("os.path.exists", return_value=False):
-                with patch(
-                    "claude_cli.check_model_vision.check_model_vision"
-                ) as mock_check:
-                    mock_check.return_value = (None, None)
-                    check_model_vision.main()
-                    assert cap_file.exists()
+    with patch.dict(os.environ, {}, clear=True):
+        with patch("claude_cli.check_model_vision.get_active_model", return_value=None):
+            main()
+    captured = capsys.readouterr()
+    output = json.loads(captured.out)
+    assert "models" in output
+    assert "any_vision_available" in output
+    assert output["any_vision_available"] is False
 
 
-def test_main_active_model(tmp_path):
-    """Test main() includes __active__ model when state exists."""
-    from claude_cli import check_model_vision
+def test_main_with_env_var(capsys):
+    """Test main() includes ANTHROPIC_DEFAULT_SONNET_MODEL in stdout."""
+    from claude_cli.check_model_vision import main
 
-    cap_file = tmp_path / "model-capabilities.json"
-    with patch.object(check_model_vision, "CAP_FILE", str(cap_file)):
+    with patch.dict(
+        os.environ, {"ANTHROPIC_DEFAULT_SONNET_MODEL": "claude-3-5-sonnet"}
+    ):
+        with patch("claude_cli.check_model_vision.check_model_vision") as mock_check:
+            mock_check.return_value = (None, None)
+            main()
+    captured = capsys.readouterr()
+    output = json.loads(captured.out)
+    assert "ANTHROPIC_DEFAULT_SONNET_MODEL" in output["models"]
+
+
+def test_main_active_model(capsys):
+    """Test main() includes __active__ model in stdout when state exists."""
+    from claude_cli.check_model_vision import main
+
+    with patch.dict(os.environ, {}):
         with patch(
             "claude_cli.check_model_vision.get_active_model",
             return_value="granite-guardian:latest",
@@ -259,20 +222,21 @@ def test_main_active_model(tmp_path):
                 "claude_cli.check_model_vision.check_model_vision"
             ) as mock_check:
                 mock_check.return_value = (None, None)
-                check_model_vision.main()
-                assert cap_file.exists()
+                main()
+    captured = capsys.readouterr()
+    output = json.loads(captured.out)
+    assert "__active__" in output["models"]
 
 
-def test_main_output_format(tmp_path):
-    """Test main() output includes required fields."""
-    from claude_cli import check_model_vision
+def test_main_output_format(capsys):
+    """Test main() stdout includes required fields."""
+    from claude_cli.check_model_vision import main
 
-    cap_file = tmp_path / "model-capabilities.json"
-    with patch.object(check_model_vision, "CAP_FILE", str(cap_file)):
-        with patch.dict(os.environ, {}):
-            with patch("os.path.exists", return_value=False):
-                with patch("subprocess.check_output") as mock_check:
-                    mock_check.return_value = b"2024-01-01T00:00:00+00:00"
-                    check_model_vision.main()
-                    # Check output was written to file
-                    assert cap_file.exists()
+    with patch.dict(os.environ, {}):
+        with patch("claude_cli.check_model_vision.get_active_model", return_value=None):
+            main()
+    captured = capsys.readouterr()
+    output = json.loads(captured.out)
+    assert "models" in output
+    assert "any_vision_available" in output
+    assert "checked_at" in output
