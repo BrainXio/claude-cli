@@ -1,7 +1,13 @@
-"""Bootstrap identity adapter — isolates _identity.py from bootstrap.py.
+"""OUT OF SCOPE — Identity layer boundary module.
 
-This is the ONLY module in claude_cli that may import from _identity.
-All identity-layer calls from bootstrap.py go through this adapter.
+This module is explicitly EXCLUDED from the Claude CLI baseline
+stabilization per PLAN.md Scope Boundary. The `_identity.py`
+session/agent tracking layer belongs in a separate operational
+layer and must not bleed into core CLI stabilization.
+
+This adapter exists ONLY to prevent direct `_identity` imports
+from spreading into `bootstrap.py` and other core hooks.
+It is a containment boundary, not a feature. Do not expand it.
 """
 
 from __future__ import annotations

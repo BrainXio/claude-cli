@@ -1,6 +1,8 @@
 """Claude Code agent bootstrap — minimal environment setup.
 
-Handles: session identity, directory creation, docs sync.
+Handles: directory creation, docs sync, state persistence.
+Identity/session logic is delegated to _bootstrap_identity.py
+(out of scope per PLAN.md boundary).
 """
 
 import json
@@ -115,6 +117,10 @@ def main() -> None:
     branch = os.environ.get("CLAUDE_AGENT_BRANCH", "main")
     worktree = os.environ.get("CLAUDE_AGENT_WORKTREE")
 
+    # --- OUT OF SCOPE boundary ------------------------------------------------
+    # Identity layer is explicitly excluded from baseline stabilization.
+    # See PLAN.md Scope Boundary and _bootstrap_identity.py for details.
+    # Do not add identity logic here; route through _bootstrap_identity.py only.
     from ._bootstrap_identity import register_and_resume, handle_batch
 
     session_record, resumed_items, migrated_tasks = register_and_resume(
