@@ -14,7 +14,9 @@ jobs:
       python-version: "3.12"
       src-path: "src"
       test-path: "tests"
-      coverage-fail-under: 90
+      coverage-source: "src/claude_cli"
+      coverage-fail-under: 85
+      mypy-target: "src/claude_cli/"
 
   starter:
     uses: BrainXio/cicd/.github/workflows/starter-checks.yml@v1

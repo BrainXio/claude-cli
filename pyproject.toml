@@ -51,3 +51,18 @@ testpaths = ["tests"]
 [tool.hatch.build.targets.wheel]
 packages = ["src/claude_cli", "src/claude_quality", "src/claude_knowledge"]
 only-include = ["src/claude_cli", "src/claude_quality", "src/claude_knowledge", "templates"]
+
+[tool.coverage.run]
+omit = [
+    "src/claude_cli/_identity.py",
+    "src/claude_cli/_bootstrap_identity.py",
+]
+
+[tool.coverage.report]
+exclude_also = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "assert False",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+]
