@@ -1,0 +1,20 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  python-ci:
+    uses: BrainXio/cicd/.github/workflows/ci-python.yml@v1
+    with:
+      python-version: "3.12"
+      src-path: "src"
+      test-path: "tests"
+      coverage-fail-under: 50
+
+  starter:
+    uses: BrainXio/cicd/.github/workflows/starter-checks.yml@v1

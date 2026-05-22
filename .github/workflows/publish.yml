@@ -1,0 +1,9 @@
+name: Publish
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  pypi-publish:
+    uses: BrainXio/cicd/.github/workflows/publish-pypa.yml@v1
+    secrets: inherit

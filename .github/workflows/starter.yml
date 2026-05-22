@@ -1,0 +1,12 @@
+name: Starter Checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  starter:
+    uses: BrainXio/cicd/.github/workflows/starter-checks.yml@v1

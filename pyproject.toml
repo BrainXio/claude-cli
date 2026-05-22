@@ -1,0 +1,53 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "claude-cli"
+version = "0.1.0"
+description = "Claude-native CLI: lifecycle hooks, quality gate, knowledge engine, and dispatch"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+# Claude Code official hooks (called by settings.json)
+claude-bootstrap         = "claude_cli.bootstrap:main"
+claude-check-model-vision = "claude_cli.check_model_vision:main"
+claude-pre-compact        = "claude_cli.pre_compact:main"
+claude-pre-commit         = "claude_cli.pre_commit:main"
+claude-session-end        = "claude_cli.session_end:main"
+claude-session-start      = "claude_cli.session_start:main"
+claude-standards-guard    = "claude_cli.standards_guard:main"
+
+# Utilities
+claude-dispatch           = "claude_cli.dispatch:main"
+claude-knowledge          = "claude_knowledge.cli:main"
+claude-statusline         = "claude_cli.statusline:main"
+
+[dependency-groups]
+dev = [
+    "build",
+    "mdformat",
+    "mdformat-frontmatter",
+    "mdformat-gfm",
+    "mypy",
+    "pytest",
+    "pytest-cov",
+    "ruff",
+    "types-PyYAML",
+    "yamllint",
+]
+
+[tool.mypy]
+[[tool.mypy.overrides]]
+module = ["yaml", "pytest"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+
+testpaths = ["tests"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/claude_cli", "src/claude_quality", "src/claude_knowledge"]
+only-include = ["src/claude_cli", "src/claude_quality", "src/claude_knowledge", "templates"]

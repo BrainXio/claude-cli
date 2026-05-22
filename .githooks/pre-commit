@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# Pre-commit hook for claude-cli
+# Runs linting, type checking, tests, and attribution guard.
+set -euo pipefail
+
+ATTRIBUTION_PATTERNS=(
+  "[Cc]o-authored[- ]by"
+  "[Gg]enerated[- ]by[- ]AI"
+  "[Aa]I[- ]generated"
+  "[Ww]ritten[- ]by[- ](Claude|ChatGPT|Copilot|Gemini)"
+  "[Cc]reated[- ]with[- ](Claude|ChatGPT|Copilot|Gemini)"
+  "GitHub[- ]Copilot"
+)
+
+staged_files=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null || true)
+if [ -z "$staged_files" ]; then
+  exit 0
+fi
+
+echo "Running pre-commit checks for claude-cli..."
+
+# --- Python checks ---
+py_files=$(echo "$staged_files" | grep -E '\.py$' || true)
+if [ -n "$py_files" ]; then
+  echo "Checking Python formatting (ruff format)..."
+  echo "$py_files" | xargs -r ruff format --check --diff || {
+    echo "Run 'ruff format' to fix formatting."
+    exit 1
+  }
+
+  echo "Running ruff check..."
+  echo "$py_files" | xargs -r ruff check || {
+    echo "Fix linting errors before committing."
+    exit 1
+  }
+
+  if command -v mypy &>/dev/null; then
+    echo "Running mypy..."
+    echo "$py_files" | xargs -r mypy || {
+      echo "Fix type errors before committing."
+      exit 1
+    }
+  fi
+fi
+
+# --- Tests ---
+if [ -n "$py_files" ]; then
+  if command -v pytest &>/dev/null; then
+    echo "Running pytest (fast)..."
+    pytest -q --tb=short || {
+      echo "Tests failed. Fix before committing."
+      exit 1
+    }
+  fi
+fi
+
+# --- Attribution guard ---
+violations=0
+for file in README.md CONTRIBUTING.md SECURITY.md; do
+  if echo "$staged_files" | grep -qx "$file"; then
+    content=$(git show ":$file" 2>/dev/null || true)
+    if [ -z "$content" ]; then
+      continue
+    fi
+    for pattern in "${ATTRIBUTION_PATTERNS[@]}"; do
+      matches=$(echo "$content" | grep -inE "$pattern" 2>/dev/null || true)
+      if [ -n "$matches" ]; then
+        echo "ERROR: forbidden attribution pattern in $file:" >&2
+        echo "$matches" | head -5 >&2
+        violations=$((violations + 1))
+      fi
+    done
+  fi
+done
+
+if [ "$violations" -gt 0 ]; then
+  echo "Attribution guard: $violations violation(s) found. Remove AI attribution before committing." >&2
+  exit 1
+fi
+
+echo "Pre-commit checks passed."
+exit 0
