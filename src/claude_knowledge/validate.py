@@ -9,30 +9,21 @@ from __future__ import annotations
 import argparse
 from typing import Any
 
-from claude_knowledge._config import KNOWLEDGE_DIR, REPORTS_DIR, now_iso, today_iso
-from claude_knowledge._utils import (
-    count_inbound_links,
-    extract_wikilinks,
-    file_hash,
-    get_article_word_count,
-    list_raw_files,
-    list_wiki_articles,
-    load_state,
-    save_state,
-    wiki_article_exists,
-)
+from claude_knowledge import _utils
+from claude_knowledge._config import get_reports_dir, now_iso, today_iso
 
 
 def check_broken_links() -> list[dict[str, Any]]:
     """Check for [[wikilinks]] that point to non-existent articles."""
     issues: list[dict[str, Any]] = []
-    for article in list_wiki_articles():
+    knowledge_dir = _utils.get_knowledge_dir()
+    for article in _utils.list_wiki_articles():
         content = article.read_text(encoding="utf-8")
-        rel = article.relative_to(KNOWLEDGE_DIR)
-        for link in extract_wikilinks(content):
+        rel = article.relative_to(knowledge_dir)
+        for link in _utils.extract_wikilinks(content):
             if link.startswith("daily/"):
                 continue
-            if not wiki_article_exists(link):
+            if not _utils.wiki_article_exists(link):
                 issues.append(
                     {
                         "severity": "error",
@@ -47,10 +38,11 @@ def check_broken_links() -> list[dict[str, Any]]:
 def check_orphan_pages() -> list[dict[str, Any]]:
     """Check for articles with zero inbound links."""
     issues: list[dict[str, Any]] = []
-    for article in list_wiki_articles():
-        rel = article.relative_to(KNOWLEDGE_DIR)
+    knowledge_dir = _utils.get_knowledge_dir()
+    for article in _utils.list_wiki_articles():
+        rel = article.relative_to(knowledge_dir)
         link_target = str(rel).replace(".md", "").replace("\\", "/")
-        inbound = count_inbound_links(link_target)
+        inbound = _utils.count_inbound_links(link_target)
         if inbound == 0:
             issues.append(
                 {
@@ -65,10 +57,10 @@ def check_orphan_pages() -> list[dict[str, Any]]:
 
 def check_orphan_sources() -> list[dict[str, Any]]:
     """Check for daily logs that haven't been compiled yet."""
-    state = load_state()
+    state = _utils.load_state()
     ingested = state.get("ingested", {})
     issues = []
-    for log_path in list_raw_files():
+    for log_path in _utils.list_raw_files():
         if log_path.name not in ingested:
             issues.append(
                 {
@@ -83,14 +75,14 @@ def check_orphan_sources() -> list[dict[str, Any]]:
 
 def check_stale_articles() -> list[dict[str, Any]]:
     """Check if source daily logs have changed since compilation."""
-    state = load_state()
+    state = _utils.load_state()
     ingested = state.get("ingested", {})
     issues = []
-    for log_path in list_raw_files():
+    for log_path in _utils.list_raw_files():
         rel = log_path.name
         if rel in ingested:
             stored_hash = ingested[rel].get("hash", "")
-            current_hash = file_hash(log_path)
+            current_hash = _utils.file_hash(log_path)
             if stored_hash != current_hash:
                 issues.append(
                     {
@@ -106,18 +98,19 @@ def check_stale_articles() -> list[dict[str, Any]]:
 def check_missing_backlinks() -> list[dict[str, Any]]:
     """Check for asymmetric links between concept articles."""
     issues = []
-    for article in list_wiki_articles():
+    knowledge_dir = _utils.get_knowledge_dir()
+    for article in _utils.list_wiki_articles():
         content = article.read_text(encoding="utf-8")
-        rel = article.relative_to(KNOWLEDGE_DIR)
+        rel = article.relative_to(knowledge_dir)
         source_link = str(rel).replace(".md", "").replace("\\", "/")
 
         if not source_link.startswith("concepts/"):
             continue
 
-        for link in extract_wikilinks(content):
+        for link in _utils.extract_wikilinks(content):
             if link.startswith("daily/"):
                 continue
-            target_path = KNOWLEDGE_DIR / f"{link}.md"
+            target_path = knowledge_dir / f"{link}.md"
             if not target_path.exists():
                 continue
             if not link.startswith("concepts/"):
@@ -139,10 +132,11 @@ def check_missing_backlinks() -> list[dict[str, Any]]:
 def check_sparse_articles() -> list[dict[str, Any]]:
     """Check for articles with fewer than 200 words."""
     issues = []
-    for article in list_wiki_articles():
-        word_count = get_article_word_count(article)
+    knowledge_dir = _utils.get_knowledge_dir()
+    for article in _utils.list_wiki_articles():
+        word_count = _utils.get_article_word_count(article)
         if word_count < 200:
-            rel = article.relative_to(KNOWLEDGE_DIR)
+            rel = article.relative_to(knowledge_dir)
             issues.append(
                 {
                     "severity": "suggestion",
@@ -208,14 +202,15 @@ def validate_kb() -> dict[str, Any]:
         issues = check_fn()
         all_issues.extend(issues)
 
-    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    reports_dir = get_reports_dir()
+    reports_dir.mkdir(parents=True, exist_ok=True)
     report = generate_report(all_issues)
-    report_path = REPORTS_DIR / f"lint-{today_iso()}.md"
+    report_path = reports_dir / f"lint-{today_iso()}.md"
     report_path.write_text(report, encoding="utf-8")
 
-    state = load_state()
+    state = _utils.load_state()
     state["last_lint"] = now_iso()
-    save_state(state)
+    _utils.save_state(state)
 
     return {
         "issues": {

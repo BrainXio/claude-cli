@@ -7,12 +7,28 @@ import json
 from pathlib import Path
 from typing import Any
 
-from claude_knowledge._config import KNOWLEDGE_DIR, now_iso
+from claude_knowledge._config import get_knowledge_dir, now_iso
 
 
 def _file_hash(path: Path) -> str:
     """Compute a stable hash for a file's content."""
     return hashlib.sha256(path.read_bytes()).hexdigest()[:16]
+
+
+def _serialize_yaml_object(obj: Any) -> Any:
+    """Convert YAML objects to JSON-serializable types."""
+    import datetime
+
+    if isinstance(obj, datetime.date) and not isinstance(obj, datetime.datetime):
+        # Convert date to ISO format string
+        return obj.isoformat()
+    if isinstance(obj, datetime.datetime):
+        return obj.isoformat()
+    if isinstance(obj, (list, tuple)):
+        return [_serialize_yaml_object(item) for item in obj]
+    if isinstance(obj, dict):
+        return {k: _serialize_yaml_object(v) for k, v in obj.items()}
+    return obj
 
 
 def _parse_frontmatter(content: str) -> tuple[dict[str, Any], str]:
@@ -28,8 +44,10 @@ def _parse_frontmatter(content: str) -> tuple[dict[str, Any], str]:
         meta = yaml.safe_load(parts[1])
         if not isinstance(meta, dict):
             meta = {}
+        # Convert date objects to strings for JSON serialization
+        meta = _serialize_yaml_object(meta)
         return meta, parts[2]
-    except ImportError:
+    except Exception:
         return {}, content
 
 
@@ -45,7 +63,7 @@ def ingest_dir(
         {"ingested": int, "unchanged": int, "errors": list[str]}
     """
     src = Path(source).resolve()
-    state_file = KNOWLEDGE_DIR / "ingest_state.json"
+    state_file = get_knowledge_dir() / "ingest_state.json"
     state: dict[str, Any] = {}
     if state_file.exists() and not force_all:
         try:
@@ -69,7 +87,7 @@ def ingest_dir(
             meta, body = _parse_frontmatter(content)
 
             # Write artifact
-            artifact_dir = KNOWLEDGE_DIR / "artifacts"
+            artifact_dir = get_knowledge_dir() / "artifacts"
             artifact_dir.mkdir(parents=True, exist_ok=True)
             artifact = artifact_dir / f"{rel.replace('/', '_')}.json"
             artifact.write_text(

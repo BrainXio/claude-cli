@@ -36,6 +36,9 @@ def scan_prototypes(
     for path in root.rglob("*"):
         if path.name in sentinel_files:
             project_dir = path.parent
+            # Skip if this project is nested under another already-visited project
+            if any(visited_dir in project_dir.parents for visited_dir in visited):
+                continue
             if project_dir in visited:
                 continue
             visited.add(project_dir)

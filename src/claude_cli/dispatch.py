@@ -100,17 +100,18 @@ def group_parallel(stages: list[dict[str, Any]]) -> list[list[dict[str, Any]]]:
     """Group stages that can run in parallel into batches."""
     batches: list[list[dict[str, Any]]] = []
     current: list[dict[str, Any]] = []
-    current_deps: set[str] = set()
+    completed_deps: set[str] = set()
 
     for stage in stages:
         deps = set(stage.get("depends_on", []))
-        if deps <= current_deps:
+        if deps <= completed_deps:
             current.append(stage)
         else:
             if current:
                 batches.append(current)
+                for s in current:
+                    completed_deps.add(s["name"])
             current = [stage]
-        current_deps.add(stage["name"])
 
     if current:
         batches.append(current)

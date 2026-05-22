@@ -45,8 +45,13 @@ def _today_compact() -> str:
 
 def _sanitize_kebab(name: str) -> str:
     """Convert a string to kebab-case, ≤32 chars."""
-    cleaned = name.lower().replace(" ", "-").replace("_", "-")
-    cleaned = "".join(c for c in cleaned if c.isalnum() or c == "-")
+    cleaned = name.lower()
+    # Replace non-alphanumeric characters with hyphens
+    cleaned = "".join(c if c.isalnum() or c == "-" else "-" for c in cleaned)
+    # Collapse multiple hyphens into one
+    import re
+
+    cleaned = re.sub(r"-+", "-", cleaned)
     cleaned = cleaned.strip("-")
     return cleaned[:32]
 

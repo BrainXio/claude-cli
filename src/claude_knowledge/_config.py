@@ -86,6 +86,40 @@ def today_iso() -> str:
     return now().strftime("%Y-%m-%d")
 
 
+def get_reports_dir() -> Path:
+    """Get the reports directory path (for monkeypatching in tests)."""
+    return REPORTS_DIR
+
+
+def get_knowledge_dir() -> Path:
+    """Get the knowledge directory path (for monkeypatching in tests)."""
+    return KNOWLEDGE_DIR
+
+
+def get_daily_dir() -> Path:
+    """Get the daily directory path (for monkeypatching in tests)."""
+    return DAILY_DIR
+
+
+# Helper functions for monkeypatching
+def set_knowledge_dir(path: Path) -> None:
+    """Set the knowledge directory (for testing)."""
+    global KNOWLEDGE_DIR, CONCEPTS_DIR, CONNECTIONS_DIR, QA_DIR
+    KNOWLEDGE_DIR = path
+    CONCEPTS_DIR = path / "concepts"
+    CONNECTIONS_DIR = path / "connections"
+    QA_DIR = path / "qa"
+
+
+def set_reports_dir(path: Path) -> None:
+    """Set the reports directory (for testing)."""
+    global REPORTS_DIR, REPORTS_STATE, REPORTS_LOGS, REPORTS_TMP
+    REPORTS_DIR = path
+    REPORTS_STATE = path / "state"
+    REPORTS_LOGS = path / "logs"
+    REPORTS_TMP = path / "tmp"
+
+
 # ── Helpers ────────────────────────────────────────────────────────────
 def ensure_dirs() -> None:
     """Create required directories. Skipped for hooks for performance."""

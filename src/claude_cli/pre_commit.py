@@ -9,11 +9,22 @@ import subprocess
 import sys
 
 
-def main() -> None:
+def main() -> int:
     for cmd, desc in [
         (["uv", "run", "ruff", "format", "src/"], "ruff format"),
         (["uv", "run", "ruff", "check", "--fix", "src/"], "ruff check --fix"),
-        (["uv", "run", "mdformat", "."], "mdformat"),
+        (
+            [
+                "uvx",
+                "--with",
+                "mdformat-frontmatter",
+                "--with",
+                "mdformat-gfm",
+                "mdformat",
+                ".",
+            ],
+            "mdformat",
+        ),
     ]:
         r = subprocess.run(cmd, capture_output=True, text=True)
         if "reformatted" in r.stdout or "fixed" in r.stdout:
@@ -29,11 +40,11 @@ def main() -> None:
     if r.returncode != 0:
         print(f"  mypy: FAIL\n{r.stdout}{r.stderr}")
         print("Pre-commit blocked: mypy errors.")
-        sys.exit(1)
+        return 1
     print("  mypy: OK")
 
-    sys.exit(0)
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

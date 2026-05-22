@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from claude_knowledge._config import KNOWLEDGE_DIR
+from claude_knowledge._config import get_knowledge_dir
 
 
 def _compute_corpus_hash(documents: list[tuple[str, str]]) -> str:
@@ -33,7 +33,7 @@ def build_index(
         The built index dict.
     """
     if index_path is None:
-        index_path = KNOWLEDGE_DIR / "index_cache.json"
+        index_path = get_knowledge_dir() / "index_cache.json"
     path = Path(index_path)
 
     from claude_knowledge._utils import _compute_tf_idf
@@ -64,7 +64,7 @@ def load_index(
         Index dict, or None if the index file does not exist.
     """
     if index_path is None:
-        index_path = KNOWLEDGE_DIR / "index_cache.json"
+        index_path = get_knowledge_dir() / "index_cache.json"
     path = Path(index_path)
     if not path.exists():
         return None

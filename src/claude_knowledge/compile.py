@@ -6,7 +6,7 @@ import json
 import re
 from typing import Any
 
-from claude_knowledge._config import DAILY_DIR, KNOWLEDGE_DIR, now_iso
+from claude_knowledge._config import get_daily_dir, get_knowledge_dir, now_iso
 
 
 def _extract_entries(log_content: str) -> list[dict[str, Any]]:
@@ -23,7 +23,9 @@ def _extract_entries(log_content: str) -> list[dict[str, Any]]:
         if re.match(r"^\d{4}-\d{2}-\d{2}[T ]", line):
             if current:
                 entries.append(current)
-            current = {"timestamp": line.split()[0], "body": line, "tags": []}
+            # Extract tags from timestamp line
+            tags = [tag.lstrip("#") for tag in re.findall(r"#\w+", line)]
+            current = {"timestamp": line.split()[0], "body": line, "tags": tags}
         elif current is not None:
             current["body"] += "\n" + line
             # Tag extraction
@@ -45,10 +47,10 @@ def compile_logs(
     Returns:
         {"compiled": int, "errors": list[str]}
     """
-    articles_dir = KNOWLEDGE_DIR / "articles"
+    articles_dir = get_knowledge_dir() / "articles"
     articles_dir.mkdir(parents=True, exist_ok=True)
 
-    state_file = KNOWLEDGE_DIR / "compile_state.json"
+    state_file = get_knowledge_dir() / "compile_state.json"
     state: dict[str, Any] = {}
     if state_file.exists():
         try:
@@ -59,7 +61,7 @@ def compile_logs(
     compiled = 0
     errors: list[str] = []
 
-    for log_path in DAILY_DIR.glob("*.md"):
+    for log_path in get_daily_dir().glob("*.md"):
         try:
             content = log_path.read_text()
             entries = _extract_entries(content)

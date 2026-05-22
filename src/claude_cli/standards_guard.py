@@ -67,7 +67,7 @@ ALLOWED_REPOS = {
 }
 
 PHANTOM_REPO_RE = re.compile(
-    r"https?://github\.com/((?:brainxio)/[^\s\)\]]+)", re.IGNORECASE
+    r"https?://github\.com/([^\s\)\]/]+/[^\s\)\]]+)", re.IGNORECASE
 )
 
 # --- Guarded file patterns ---
@@ -142,14 +142,14 @@ def main() -> None:
     try:
         data = json.load(sys.stdin)
     except (json.JSONDecodeError, EOFError):
-        sys.exit(0)
+        return
 
     tool_name = data.get("tool_name", "")
     tool_input = data.get("tool_input", {})
     file_path = tool_input.get("file_path", "")
 
     if not file_path:
-        sys.exit(0)
+        return
 
     # Extract new content
     if tool_name == "Edit":
@@ -157,10 +157,10 @@ def main() -> None:
     elif tool_name == "Write":
         content = tool_input.get("content", "")
     else:
-        sys.exit(0)
+        return
 
     if not content:
-        sys.exit(0)
+        return
 
     all_violations = []
 
@@ -182,11 +182,9 @@ def main() -> None:
             }
         }
         print(json.dumps(output))
-        sys.exit(0)
 
-    sys.exit(0)
+    return
 
 
 if __name__ == "__main__":
     main()
-    sys.exit(0)

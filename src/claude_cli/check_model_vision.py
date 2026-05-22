@@ -10,6 +10,7 @@ guard vision tool calls before invoking them.
 Intended as a SessionStart hook.
 """
 
+import datetime
 import json
 import os
 import subprocess
@@ -57,7 +58,7 @@ def get_active_model() -> str | None:
         state = json.load(f)
     mode_str = state.get("mode", {}).get("string", "")
     mode_str = mode_str if isinstance(mode_str, str) else None
-    if mode_str is None:
+    if not mode_str:
         return None
     # "Ollama-Cloud:deepseek-v4-pro:cloud" -> "deepseek-v4-pro:cloud"
     parts = mode_str.split(":")
@@ -172,7 +173,9 @@ def main() -> None:
     output = {
         "models": results,
         "any_vision_available": any_vision,
-        "checked_at": subprocess.check_output(["date", "-Iseconds"]).decode().strip(),
+        "checked_at": datetime.datetime.now(datetime.timezone.utc)
+        .isoformat()
+        .replace("+00:00", "Z"),
     }
 
     os.makedirs(os.path.dirname(CAP_FILE), exist_ok=True)

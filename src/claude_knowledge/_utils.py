@@ -10,16 +10,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from claude_knowledge._config import (
-    CONCEPTS_DIR,
-    CONNECTIONS_DIR,
-    DAILY_DIR,
-    INDEX_FILE,
-    KNOWLEDGE_DIR,
-    QA_DIR,
-    REPORTS_STATE,
-    STATE_FILE,
-)
+from claude_knowledge import _config
 
 
 # ── State management ──────────────────────────────────────────────────
@@ -27,8 +18,10 @@ from claude_knowledge._config import (
 
 def load_state() -> dict[str, Any]:
     """Load persistent state from state.json."""
-    if STATE_FILE.exists():
-        data: dict[str, Any] = json.loads(STATE_FILE.read_text(encoding="utf-8"))
+    if _config.STATE_FILE.exists():
+        data: dict[str, Any] = json.loads(
+            _config.STATE_FILE.read_text(encoding="utf-8")
+        )
         return data
     state: dict[str, Any] = {
         "ingested": {},
@@ -41,8 +34,8 @@ def load_state() -> dict[str, Any]:
 
 def save_state(state: dict[str, Any]) -> None:
     """Save state to state.json."""
-    REPORTS_STATE.mkdir(parents=True, exist_ok=True)
-    STATE_FILE.write_text(json.dumps(state, indent=2), encoding="utf-8")
+    _config.REPORTS_STATE.mkdir(parents=True, exist_ok=True)
+    _config.STATE_FILE.write_text(json.dumps(state, indent=2), encoding="utf-8")
 
 
 # ── File hashing ──────────────────────────────────────────────────────
@@ -79,7 +72,7 @@ def extract_wikilinks(content: str) -> list[str]:
 
 def wiki_article_exists(link: str) -> bool:
     """Check if a wikilinked article exists on disk."""
-    path = KNOWLEDGE_DIR / f"{link}.md"
+    path = _config.KNOWLEDGE_DIR / f"{link}.md"
     return path.exists()
 
 
@@ -88,8 +81,8 @@ def wiki_article_exists(link: str) -> bool:
 
 def read_wiki_index() -> str:
     """Read the knowledge base index file."""
-    if INDEX_FILE.exists():
-        return INDEX_FILE.read_text(encoding="utf-8")
+    if _config.INDEX_FILE.exists():
+        return _config.INDEX_FILE.read_text(encoding="utf-8")
     return "# Knowledge Base Index\n\n| Article | Summary | Compiled From | Updated |\n|---------|---------|---------------|---------|"
 
 
@@ -97,11 +90,11 @@ def read_all_wiki_content() -> str:
     """Read index + all wiki articles into a single string for context."""
     parts = [f"## INDEX\n\n{read_wiki_index()}"]
 
-    for subdir in [CONCEPTS_DIR, CONNECTIONS_DIR, QA_DIR]:
+    for subdir in [_config.CONCEPTS_DIR, _config.CONNECTIONS_DIR, _config.QA_DIR]:
         if not subdir.exists():
             continue
         for md_file in sorted(subdir.glob("*.md")):
-            rel = md_file.relative_to(KNOWLEDGE_DIR)
+            rel = md_file.relative_to(_config.KNOWLEDGE_DIR)
             content = md_file.read_text(encoding="utf-8")
             parts.append(f"## {rel}\n\n{content}")
 
@@ -111,7 +104,7 @@ def read_all_wiki_content() -> str:
 def list_wiki_articles() -> list[Path]:
     """List all wiki article files."""
     articles = []
-    for subdir in [CONCEPTS_DIR, CONNECTIONS_DIR, QA_DIR]:
+    for subdir in [_config.CONCEPTS_DIR, _config.CONNECTIONS_DIR, _config.QA_DIR]:
         if subdir.exists():
             articles.extend(sorted(subdir.glob("*.md")))
     return articles
@@ -119,9 +112,9 @@ def list_wiki_articles() -> list[Path]:
 
 def list_raw_files() -> list[Path]:
     """List all daily log files."""
-    if not DAILY_DIR.exists():
+    if not _config.DAILY_DIR.exists():
         return []
-    return sorted(DAILY_DIR.glob("*.md"))
+    return sorted(_config.DAILY_DIR.glob("*.md"))
 
 
 # ── Index helpers ─────────────────────────────────────────────────────
@@ -139,6 +132,11 @@ def count_inbound_links(target: str, exclude_file: Path | None = None) -> int:
         if pattern.search(content):
             count += 1
     return count
+
+
+def get_knowledge_dir() -> Path:
+    """Get the knowledge directory path (for monkeypatching in tests)."""
+    return _config.KNOWLEDGE_DIR
 
 
 def get_article_word_count(path: Path) -> int:

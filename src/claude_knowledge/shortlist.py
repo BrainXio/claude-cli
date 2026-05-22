@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from claude_knowledge._config import KNOWLEDGE_DIR
+from claude_knowledge._config import get_knowledge_dir
 
 
 def get_shortlist(
@@ -22,13 +22,20 @@ def get_shortlist(
         List of prototype dicts.
     """
     if shortlist_path is None:
-        shortlist_path = KNOWLEDGE_DIR / "shortlist.json"
+        shortlist_path = get_knowledge_dir() / "shortlist.json"
     path = Path(shortlist_path)
     if not path.exists():
         return []
     try:
         data = json.loads(path.read_text())
-        return data if isinstance(data, list) else data.get("prototypes", [])
+        if isinstance(data, list):
+            return data
+        # Handle {"prototypes": [...]} format
+        if isinstance(data, dict) and "prototypes" in data:
+            prototypes = data["prototypes"]
+            return prototypes if isinstance(prototypes, list) else []
+        # Non-list, non-dict with prototypes key - return empty
+        return []
     except (OSError, json.JSONDecodeError):
         return []
 
@@ -43,7 +50,7 @@ def update_shortlist(
         The path written to.
     """
     if shortlist_path is None:
-        shortlist_path = KNOWLEDGE_DIR / "shortlist.json"
+        shortlist_path = get_knowledge_dir() / "shortlist.json"
     path = Path(shortlist_path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(prototypes, indent=2) + "\n")

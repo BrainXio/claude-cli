@@ -44,7 +44,14 @@ def _cmd_query(args: argparse.Namespace) -> int:
 def _cmd_validate(args: argparse.Namespace) -> int:
     report = validate.validate_kb()
     print(json.dumps(report, indent=2))
-    return 0 if not report.get("issues") else 1
+    issues = report.get("issues", {})
+    return (
+        0
+        if issues.get("errors", 0) == 0
+        and issues.get("warnings", 0) == 0
+        and issues.get("suggestions", 0) == 0
+        else 1
+    )
 
 
 def main() -> int:
