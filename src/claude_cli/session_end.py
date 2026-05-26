@@ -12,7 +12,12 @@ os.environ["PKB_SKIP_ENSURE_DIRS"] = "1"
 
 from ._config import ROOT_DIR, REPORTS_LOGS, REPORTS_TMP, now
 from ._hook_metrics import timed_hook
-from ._utils import extract_conversation_context, get_logger, parse_stdin_json, spawn_detached
+from ._utils import (
+    extract_conversation_context,
+    get_logger,
+    parse_stdin_json,
+    spawn_detached,
+)
 
 MIN_TURNS_TO_FLUSH = 1
 

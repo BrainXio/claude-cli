@@ -79,7 +79,11 @@ def _validate_workflow_structural(data: dict[str, Any]) -> None:
     """
     if not isinstance(data, dict):
         raise ValueError("Workflow root must be an object")
-    if "workflow" not in data or not isinstance(data["workflow"], str) or not data["workflow"]:
+    if (
+        "workflow" not in data
+        or not isinstance(data["workflow"], str)
+        or not data["workflow"]
+    ):
         raise ValueError("Workflow must have a non-empty 'workflow' string")
     if "stages" not in data or not isinstance(data["stages"], list):
         raise ValueError("Workflow must have a 'stages' array")
@@ -106,17 +110,25 @@ def _validate_workflow_structural(data: dict[str, Any]) -> None:
         if "depends_on" in stage:
             deps = stage["depends_on"]
             if not isinstance(deps, list) or not all(isinstance(d, str) for d in deps):
-                raise ValueError(f"Stage '{name}': 'depends_on' must be a list of strings")
+                raise ValueError(
+                    f"Stage '{name}': 'depends_on' must be a list of strings"
+                )
         if "isolation" in stage:
             val = stage["isolation"]
             if val not in ("none", "worktree", "container"):
-                raise ValueError(f"Stage '{name}': 'isolation' must be one of none|worktree|container")
+                raise ValueError(
+                    f"Stage '{name}': 'isolation' must be one of none|worktree|container"
+                )
 
 
 def load_workflow(name: str) -> dict[str, Any]:
     path = WORKFLOW_DIR / f"{name}.json"
     if not path.exists():
-        available = sorted(p.stem for p in WORKFLOW_DIR.glob("*.json")) if WORKFLOW_DIR.exists() else []
+        available = (
+            sorted(p.stem for p in WORKFLOW_DIR.glob("*.json"))
+            if WORKFLOW_DIR.exists()
+            else []
+        )
         hint = ""
         if available:
             hint = f" Available workflows: {', '.join(available)}."
@@ -164,7 +176,7 @@ def topological_sort(stages: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if name in visited:
             return
         if name in stack:
-            cycle = " -> ".join(stack[stack.index(name):] + [name])
+            cycle = " -> ".join(stack[stack.index(name) :] + [name])
             raise ValueError(f"Circular dependency detected: {cycle}")
         stack.append(name)
         stage = by_name[name]

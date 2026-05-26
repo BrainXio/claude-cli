@@ -76,9 +76,7 @@ def register_and_resume(
     return session_record, resumed_items, migrated_tasks
 
 
-def handle_batch(
-    batch_id: str, session_record: dict[str, Any]
-) -> dict[str, Any]:
+def handle_batch(batch_id: str, session_record: dict[str, Any]) -> dict[str, Any]:
     """Mark batch executed and mutate session_record with batch metadata.
 
     Returns updated session_record.

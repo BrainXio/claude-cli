@@ -59,9 +59,13 @@ def _run_pre_commit() -> int:
     except subprocess.TimeoutExpired:
         print("  pytest smoke: TIMEOUT (>10s)")
         if strict:
-            print("Pre-commit blocked: CLAUDE_STRICT_PRECOMMIT=1 requires passing smoke test.")
+            print(
+                "Pre-commit blocked: CLAUDE_STRICT_PRECOMMIT=1 requires passing smoke test."
+            )
             return 1
-        print("  Skipping smoke test (not strict mode). Run with CLAUDE_STRICT_PRECOMMIT=1 to enforce.")
+        print(
+            "  Skipping smoke test (not strict mode). Run with CLAUDE_STRICT_PRECOMMIT=1 to enforce."
+        )
 
     r = subprocess.run(
         ["uv", "run", "mypy", "src/claude_cli/", "--strict"],
