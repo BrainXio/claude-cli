@@ -1,6 +1,29 @@
 # Operations Manual
 
-For bus factor reduction: releases, secret rotation, and debugging the hook chain.
+For bus factor reduction: bootstrap, releases, secret rotation, and debugging the hook chain.
+
+## Bootstrap
+
+A new developer should be productive in under 30 minutes.
+
+```bash
+# 1. Clone
+git clone --recurse-submodules https://github.com/BrainXio/claude-cli.git
+cd claude-cli
+
+# 2. Install dependencies
+uv sync
+
+# 3. Verify environment
+uv run pytest -q
+uv run ruff check .
+uv run mypy src/claude_cli/ --strict
+
+# 4. Understand the hook chain
+# See Hook Chain Overview below
+```
+
+Architecture overview: `src/claude_cli/` contains console-script hooks registered in `pyproject.toml`. Each hook reads stdin JSON from Claude Code and writes results to stdout or files under `~/.claude/data/`.
 
 ## Hook Chain Overview
 

@@ -14,6 +14,8 @@ Configured in settings.json:
 import json
 import sys
 
+from claude_cli._hook_metrics import timed_hook
+
 
 def build_bar(percentage: int, width: int = 10) -> str:
     """Build an ASCII progress bar."""
@@ -35,25 +37,25 @@ def color_for_usage(percentage: int) -> str:
 
 
 def main() -> None:
-    try:
-        data = json.load(sys.stdin)
-    except (json.JSONDecodeError, EOFError):
-        # Fallback: just print nothing if stdin is not valid JSON
-        return
+    with timed_hook("statusline"):
+        try:
+            data = json.load(sys.stdin)
+        except (json.JSONDecodeError, EOFError):
+            return
 
-    model = data.get("model", {}).get("display_name", "unknown")
-    used = data.get("context_window", {}).get("used_percentage")
+        model = data.get("model", {}).get("display_name", "unknown")
+        used = data.get("context_window", {}).get("used_percentage")
 
-    cyan = "\033[01;36m"
-    reset = "\033[00m"
+        cyan = "\033[01;36m"
+        reset = "\033[00m"
 
-    if used is not None:
-        used_int = int(used)
-        bar = build_bar(used_int)
-        color = color_for_usage(used_int)
-        print(f"{cyan}{model}{reset} {color}[{bar}]{reset} {used_int}%")
-    else:
-        print(f"{cyan}{model}{reset}")
+        if used is not None:
+            used_int = int(used)
+            bar = build_bar(used_int)
+            color = color_for_usage(used_int)
+            print(f"{cyan}{model}{reset} {color}[{bar}]{reset} {used_int}%")
+        else:
+            print(f"{cyan}{model}{reset}")
 
 
 if __name__ == "__main__":
