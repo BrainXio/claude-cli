@@ -7,7 +7,7 @@
 **Causes:**
 
 1. The workflow JSON file does not exist in `WORKFLOW_DIR`.
-2. `CLAUDE_WORKFLOWS_DIR` is set to the wrong path.
+1. `CLAUDE_WORKFLOWS_DIR` is set to the wrong path.
 
 **Fix:**
 
@@ -25,15 +25,15 @@ claude-dispatch my-workflow
 
 **Common mistakes:**
 
-| Error | Cause | Fix |
-| --- | --- | --- |
-| `non-empty 'workflow' string` | Missing or empty top-level `workflow` key | Add `"workflow": "my-workflow-name"` |
-| `'stages' array` | `stages` is missing or not a list | Ensure `"stages": [...]` exists |
-| `Duplicate stage name` | Two stages share the same `name` | Rename one stage |
-| `'parallel' must be bool` | `parallel` is a string like `"true"` | Use JSON `true` or `false` |
-| `'max_concurrent' must be int` | `max_concurrent` is a string | Use an integer without quotes |
-| `'depends_on' must be a list of strings` | `depends_on` is a string or contains non-strings | Use `["stage-a", "stage-b"]` |
-| `'isolation' must be one of none|worktree|container` | Invalid isolation value | Use `"none"`, `"worktree"`, or `"container"` |
+| Error                                    | Cause                                            | Fix                                  |
+| ---------------------------------------- | ------------------------------------------------ | ------------------------------------ |
+| `non-empty 'workflow' string`            | Missing or empty top-level `workflow` key        | Add `"workflow": "my-workflow-name"` |
+| `'stages' array`                         | `stages` is missing or not a list                | Ensure `"stages": [...]` exists      |
+| `Duplicate stage name`                   | Two stages share the same `name`                 | Rename one stage                     |
+| `'parallel' must be bool`                | `parallel` is a string like `"true"`             | Use JSON `true` or `false`           |
+| `'max_concurrent' must be int`           | `max_concurrent` is a string                     | Use an integer without quotes        |
+| `'depends_on' must be a list of strings` | `depends_on` is a string or contains non-strings | Use `["stage-a", "stage-b"]`         |
+| \`'isolation' must be one of none        | worktree                                         | container\`                          |
 
 ## Circular Dependency
 
