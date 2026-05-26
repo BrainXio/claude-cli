@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from ._config import DATA_DIR, STATE_FILE, REPORTS_LOGS, REPORTS_STATE, REPORTS_TMP
+from ._hook_metrics import timed_hook
 
 
 def _find_git_root() -> Path | None:
@@ -110,6 +111,11 @@ def _sweep_temp_files(max_age_hours: int = 24) -> None:
 
 
 def main() -> None:
+    with timed_hook("bootstrap"):
+        _run_bootstrap()
+
+
+def _run_bootstrap() -> None:
     print("Bootstrapping Claude Code agent environment...\n")
 
     agent_name = os.environ.get("CLAUDE_AGENT_NAME", "general")
