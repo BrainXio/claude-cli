@@ -14,6 +14,7 @@ import subprocess
 from typing import Any
 
 from ._hook_metrics import fetch_with_backoff, timed_hook
+from ._llm import Provider
 
 
 STATE_FILE = os.path.expanduser("~/.claude/data/state.json")
@@ -47,6 +48,31 @@ MODEL_ENV_VARS = [
 ]
 
 
+class OllamaProvider:
+    """Ollama-backed LLM provider."""
+
+    def __init__(self, base_url: str = "http://localhost:11434") -> None:
+        self.base_url = base_url
+
+    def list_models(self) -> list[dict[str, Any]]:
+        """Return models from Ollama /api/tags."""
+        try:
+            body = fetch_with_backoff(f"{self.base_url}/api/tags", timeout=10)
+            return json.loads(body).get("models", [])  # type: ignore
+        except Exception:
+            return []
+
+    def show_model(self, model_name: str) -> tuple[str, bool]:
+        """Run 'ollama show <model>' and return stdout text."""
+        result = subprocess.run(
+            ["ollama", "show", model_name],
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        return result.stdout, result.returncode == 0
+
+
 def get_active_model() -> str | None:
     """Extract the active model identifier from state.json."""
     if not os.path.exists(STATE_FILE):
@@ -62,26 +88,6 @@ def get_active_model() -> str | None:
     if len(parts) >= 3 and parts[0] == "Ollama-Cloud":
         return ":".join(parts[1:])
     return mode_str
-
-
-def ollama_tags() -> list[dict[str, Any]]:
-    """Return list of models from Ollama /api/tags."""
-    try:
-        body = fetch_with_backoff(f"{OLLAMA_URL}/api/tags", timeout=10)
-        return json.loads(body).get("models", [])  # type: ignore
-    except Exception:
-        return []
-
-
-def ollama_show(model_name: str) -> tuple[str, bool]:
-    """Run 'ollama show <model>' and return stdout text."""
-    result = subprocess.run(
-        ["ollama", "show", model_name],
-        capture_output=True,
-        text=True,
-        timeout=30,
-    )
-    return result.stdout, result.returncode == 0
 
 
 def has_vision_capability(stdout: str) -> bool:
@@ -100,31 +106,33 @@ def has_vision_capability(stdout: str) -> bool:
     return False
 
 
-def check_model_vision(model_id: str | None) -> tuple[bool | None, str | None]:
+def check_model_vision(
+    model_id: str | None, provider: Provider
+) -> tuple[bool | None, str | None]:
     """Return (vision: bool|None, matched_model_name)."""
     if not model_id:
         return None, None
 
-    stdout, ok = ollama_show(model_id)
+    stdout, ok = provider.show_model(model_id)
     if ok:
         return has_vision_capability(stdout), model_id
 
     model_base = model_id.split(":")[0]
     candidates = []
-    for m in ollama_tags():
+    for m in provider.list_models():
         name = m.get("name", "")
         remote = m.get("remote_model", "")
         if name == model_id or remote == model_base or remote == model_id:
             candidates.append(name)
 
     for cand in candidates:
-        stdout, ok = ollama_show(cand)
+        stdout, ok = provider.show_model(cand)
         if ok:
             caps = has_vision_capability(stdout)
             if caps:
                 return True, cand
 
-    for m in ollama_tags():
+    for m in provider.list_models():
         remote = m.get("remote_model", "")
         if remote == model_base or remote == model_id:
             for vision_model in KNOWN_VISION_REMOTES:
@@ -141,6 +149,7 @@ def main() -> None:
 
 
 def _run_check() -> None:
+    provider = OllamaProvider(base_url=OLLAMA_URL)
     results = {}
     checked_models = set()
 
@@ -151,7 +160,7 @@ def _run_check() -> None:
         if model_id in checked_models:
             continue
         checked_models.add(model_id)
-        vision, matched = check_model_vision(model_id)
+        vision, matched = check_model_vision(model_id, provider)
         results[env_var] = {
             "model": model_id,
             "vision": vision,
@@ -160,7 +169,7 @@ def _run_check() -> None:
 
     active_model = get_active_model()
     if active_model and active_model not in checked_models:
-        vision, matched = check_model_vision(active_model)
+        vision, matched = check_model_vision(active_model, provider)
         results["__active__"] = {
             "model": active_model,
             "vision": vision,

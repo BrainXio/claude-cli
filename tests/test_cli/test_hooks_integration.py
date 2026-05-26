@@ -258,9 +258,18 @@ class TestCheckModelVisionHook:
 
         fake_stdout = "Capabilities\n  vision\n  tools\n"
 
-        with patch("claude_cli.check_model_vision.ollama_show", return_value=(fake_stdout, True)):
-            with patch("claude_cli.check_model_vision.ollama_tags", return_value=[]):
-                with patch("claude_cli.check_model_vision.get_active_model", return_value=None):
+        with patch(
+            "claude_cli.check_model_vision.OllamaProvider.show_model",
+            return_value=(fake_stdout, True),
+        ):
+            with patch(
+                "claude_cli.check_model_vision.OllamaProvider.list_models",
+                return_value=[],
+            ):
+                with patch(
+                    "claude_cli.check_model_vision.get_active_model",
+                    return_value=None,
+                ):
                     main()
 
         captured = capsys.readouterr()
@@ -275,9 +284,18 @@ class TestCheckModelVisionHook:
 
         fake_stdout = "Capabilities\n  tools\n"
 
-        with patch("claude_cli.check_model_vision.ollama_show", return_value=(fake_stdout, True)):
-            with patch("claude_cli.check_model_vision.ollama_tags", return_value=[]):
-                with patch("claude_cli.check_model_vision.get_active_model", return_value=None):
+        with patch(
+            "claude_cli.check_model_vision.OllamaProvider.show_model",
+            return_value=(fake_stdout, True),
+        ):
+            with patch(
+                "claude_cli.check_model_vision.OllamaProvider.list_models",
+                return_value=[],
+            ):
+                with patch(
+                    "claude_cli.check_model_vision.get_active_model",
+                    return_value=None,
+                ):
                     main()
 
         captured = capsys.readouterr()
@@ -290,12 +308,20 @@ class TestCheckModelVisionHook:
 
         from claude_cli.check_model_vision import main
 
-        with patch("claude_cli.check_model_vision.ollama_show", return_value=("", False)):
+        with patch(
+            "claude_cli.check_model_vision.OllamaProvider.show_model",
+            return_value=("", False),
+        ):
             with patch(
-                "claude_cli.check_model_vision.ollama_tags",
-                return_value=[{"name": "deepseek-vl:latest", "remote_model": "deepseek-vl"}],
+                "claude_cli.check_model_vision.OllamaProvider.list_models",
+                return_value=[
+                    {"name": "deepseek-vl:latest", "remote_model": "deepseek-vl"}
+                ],
             ):
-                with patch("claude_cli.check_model_vision.get_active_model", return_value=None):
+                with patch(
+                    "claude_cli.check_model_vision.get_active_model",
+                    return_value=None,
+                ):
                     main()
 
         captured = capsys.readouterr()

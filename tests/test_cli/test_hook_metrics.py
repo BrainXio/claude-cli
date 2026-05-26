@@ -8,7 +8,6 @@ from unittest.mock import patch
 import pytest
 
 from claude_cli._hook_metrics import (
-    METRICS_PATH,
     fetch_with_backoff,
     log_metric,
     timed_hook,

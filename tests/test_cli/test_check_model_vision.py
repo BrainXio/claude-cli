@@ -15,6 +15,20 @@ def patch_file(content):
     return MagicMock(return_value=mock_file)
 
 
+class FakeProvider:
+    """Fake LLM provider for testing check_model_vision."""
+
+    def __init__(self, models=None, show_map=None):
+        self._models = models or []
+        self._show_map = show_map or {}
+
+    def list_models(self):
+        return self._models
+
+    def show_model(self, model_name):
+        return self._show_map.get(model_name, ("", False))
+
+
 def test_get_active_model_with_ollama_cloud():
     """Test get_active_model with Ollama-Cloud format."""
     from claude_cli.check_model_vision import get_active_model
@@ -63,9 +77,9 @@ def test_get_active_model_missing_mode():
             assert result is None
 
 
-def test_ollama_tags_success():
-    """Test ollama_tags returns models from Ollama API."""
-    from claude_cli.check_model_vision import ollama_tags
+def test_ollama_provider_list_models_success():
+    """Test OllamaProvider.list_models returns models from API."""
+    from claude_cli.check_model_vision import OllamaProvider
 
     mock_response = json.dumps(
         {
@@ -76,25 +90,53 @@ def test_ollama_tags_success():
         }
     )
 
-    with patch("urllib.request.urlopen") as mock_urlopen:
-        mock_response_obj = MagicMock()
-        mock_response_obj.read.return_value = mock_response.encode()
-        mock_response_obj.__enter__.return_value = mock_response_obj
-        mock_response_obj.__exit__.return_value = None
-        mock_urlopen.return_value.__enter__.return_value = mock_response_obj
-
-        result = ollama_tags()
+    with patch(
+        "claude_cli.check_model_vision.fetch_with_backoff",
+        return_value=mock_response.encode(),
+    ):
+        provider = OllamaProvider()
+        result = provider.list_models()
         assert len(result) == 2
         assert result[0]["name"] == "llama2"
 
 
-def test_ollama_tags_error():
-    """Test ollama_tags returns empty list on error."""
-    from claude_cli.check_model_vision import ollama_tags
+def test_ollama_provider_list_models_error():
+    """Test OllamaProvider.list_models returns empty list on error."""
+    from claude_cli.check_model_vision import OllamaProvider
 
-    with patch("urllib.request.urlopen", side_effect=Exception("Network error")):
-        result = ollama_tags()
+    with patch(
+        "claude_cli.check_model_vision.fetch_with_backoff",
+        side_effect=Exception("Network error"),
+    ):
+        provider = OllamaProvider()
+        result = provider.list_models()
         assert result == []
+
+
+def test_ollama_provider_show_model_success():
+    """Test OllamaProvider.show_model returns stdout."""
+    from claude_cli.check_model_vision import OllamaProvider
+
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value.stdout = "Capabilities\n  vision"
+        mock_run.return_value.returncode = 0
+        provider = OllamaProvider()
+        stdout, ok = provider.show_model("llama3")
+        assert ok is True
+        assert "vision" in stdout
+
+
+def test_ollama_provider_show_model_failure():
+    """Test OllamaProvider.show_model returns failure."""
+    from claude_cli.check_model_vision import OllamaProvider
+
+    with patch("subprocess.run") as mock_run:
+        mock_run.return_value.stdout = ""
+        mock_run.return_value.returncode = 1
+        provider = OllamaProvider()
+        stdout, ok = provider.show_model("unknown")
+        assert ok is False
+        assert stdout == ""
 
 
 def test_has_vision_capability_true():
@@ -132,52 +174,52 @@ def test_has_vision_capability_no_caps_block():
     assert result is False
 
 
-def test_check_model_vision_with_ollama_show():
-    """Test check_model_vision uses ollama show output."""
+def test_check_model_vision_with_show():
+    """Test check_model_vision uses provider.show_model."""
     from claude_cli.check_model_vision import check_model_vision
 
-    with patch("claude_cli.check_model_vision.ollama_show") as mock_show:
-        mock_show.return_value = ("Capabilities\n  vision", True)
-        with patch(
-            "claude_cli.check_model_vision.has_vision_capability"
-        ) as mock_vision:
-            mock_vision.return_value = True
-            vision, matched = check_model_vision("llama3")
-            assert vision is True
-            assert matched == "llama3"
+    provider = FakeProvider(show_map={"llama3": ("Capabilities\n  vision", True)})
+    vision, matched = check_model_vision("llama3", provider)
+    assert vision is True
+    assert matched == "llama3"
 
 
-def test_check_model_vision_from_ollama_tags():
-    """Test check_model_vision finds model in ollama tags."""
+def test_check_model_vision_from_list_models():
+    """Test check_model_vision finds model via provider.list_models."""
     from claude_cli.check_model_vision import check_model_vision
 
-    with patch("claude_cli.check_model_vision.ollama_show") as mock_show:
-        mock_show.side_effect = [
-            ("Model not found", False),
-            ("Capabilities\n  vision", True),
-        ]
-        with patch("claude_cli.check_model_vision.ollama_tags") as mock_tags:
-            mock_tags.return_value = [{"name": "llama3", "remote_model": "llama3"}]
-            with patch(
-                "claude_cli.check_model_vision.has_vision_capability"
-            ) as mock_vision:
-                mock_vision.return_value = True
-                vision, matched = check_model_vision("llama3")
-                assert vision is True
-                assert matched == "llama3"
+    provider = FakeProvider(
+        models=[{"name": "llama3", "remote_model": "llama3"}],
+        show_map={
+            "llama3": ("Capabilities\n  vision", True),
+        },
+    )
+    vision, matched = check_model_vision("llama3", provider)
+    assert vision is True
+    assert matched == "llama3"
 
 
 def test_check_model_vision_known_remote():
     """Test check_model_vision matches known vision remote models."""
     from claude_cli.check_model_vision import check_model_vision
 
-    with patch("claude_cli.check_model_vision.ollama_show") as mock_show:
-        mock_show.return_value = ("", False)
-        with patch("claude_cli.check_model_vision.ollama_tags") as mock_tags:
-            mock_tags.return_value = [{"name": "qwen-vl", "remote_model": "qwen2.5-vl"}]
-            vision, matched = check_model_vision("qwen2.5-vl")
-            assert vision is True
-            assert matched == "qwen-vl"
+    provider = FakeProvider(
+        models=[{"name": "qwen-vl", "remote_model": "qwen2.5-vl"}],
+        show_map={"qwen2.5-vl": ("", False)},
+    )
+    vision, matched = check_model_vision("qwen2.5-vl", provider)
+    assert vision is True
+    assert matched == "qwen-vl"
+
+
+def test_check_model_vision_none():
+    """Test check_model_vision returns None for None input."""
+    from claude_cli.check_model_vision import check_model_vision
+
+    provider = FakeProvider()
+    vision, matched = check_model_vision(None, provider)
+    assert vision is None
+    assert matched is None
 
 
 def test_main_empty_env_vars(capsys):

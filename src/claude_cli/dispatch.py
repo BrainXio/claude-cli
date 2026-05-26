@@ -114,14 +114,27 @@ def _validate_workflow_structural(data: dict[str, Any]) -> None:
 def load_workflow(name: str) -> dict[str, Any]:
     path = WORKFLOW_DIR / f"{name}.json"
     if not path.exists():
-        print(f"Workflow '{name}' not found at {path}", file=sys.stderr)
+        available = sorted(p.stem for p in WORKFLOW_DIR.glob("*.json")) if WORKFLOW_DIR.exists() else []
+        hint = ""
+        if available:
+            hint = f" Available workflows: {', '.join(available)}."
+        print(
+            f"Workflow '{name}' not found at {path}."
+            f"{hint}"
+            f" Set CLAUDE_WORKFLOWS_DIR to override the search path.",
+            file=sys.stderr,
+        )
         sys.exit(1)
     with open(path) as f:
         data: dict[str, Any] = json.load(f)
     try:
         _validate_workflow_structural(data)
     except ValueError as exc:
-        print(f"Workflow '{name}' validation failed: {exc}", file=sys.stderr)
+        print(
+            f"Workflow '{name}' validation failed: {exc}"
+            f" (see src/claude_cli/_workflow_schema.json for the expected schema)",
+            file=sys.stderr,
+        )
         sys.exit(1)
     return data
 
@@ -145,21 +158,27 @@ def topological_sort(stages: list[dict[str, Any]]) -> list[dict[str, Any]]:
     visited: set[str] = set()
     order: list[dict[str, Any]] = []
 
-    def visit(name: str, stack: set[str]) -> None:
+    def visit(name: str, stack: list[str]) -> None:
         if name in visited:
             return
         if name in stack:
-            raise ValueError(f"Circular dependency detected involving '{name}'")
-        stack.add(name)
+            cycle = " -> ".join(stack[stack.index(name):] + [name])
+            raise ValueError(f"Circular dependency detected: {cycle}")
+        stack.append(name)
         stage = by_name[name]
         for dep in stage.get("depends_on", []):
+            if dep not in by_name:
+                raise ValueError(
+                    f"Stage '{name}' depends on unknown stage '{dep}'."
+                    f" Available stages: {', '.join(sorted(by_name))}"
+                )
             visit(dep, stack)
-        stack.discard(name)
+        stack.pop()
         visited.add(name)
         order.append(stage)
 
     for stage in stages:
-        visit(stage["name"], set())
+        visit(stage["name"], [])
 
     return order
 
