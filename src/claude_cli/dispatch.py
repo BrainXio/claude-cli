@@ -8,6 +8,8 @@ import sys
 from pathlib import Path
 from typing import Any, cast
 
+from ._hook_metrics import timed_hook
+
 
 def _resolve_workflow_dir() -> Path:
     env = os.environ.get("CLAUDE_WORKFLOWS_DIR", "").strip()
@@ -272,6 +274,11 @@ def print_plan(plan: dict[str, Any], dry_run: bool = False) -> None:
 
 
 def main() -> None:
+    with timed_hook("dispatch"):
+        _run_dispatch()
+
+
+def _run_dispatch() -> None:
     parser = argparse.ArgumentParser(description="Workflow dispatch engine")
     parser.add_argument("workflow", help="Workflow name (e.g., feature-implement)")
     parser.add_argument("--stage", help="Execute a single stage only")

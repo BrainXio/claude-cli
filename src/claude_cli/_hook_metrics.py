@@ -16,10 +16,28 @@ from typing import Any, Generator
 
 
 METRICS_PATH = Path.home() / ".claude" / "data" / "hook_metrics.jsonl"
+MAX_METRICS_SIZE = 10 * 1024 * 1024  # 10 MB
+MAX_METRICS_BACKUPS = 3
 
 
 def _ensure_metrics_dir() -> None:
     METRICS_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+
+def _rotate_metrics() -> None:
+    """Rotate hook_metrics.jsonl if it exceeds MAX_METRICS_SIZE."""
+    if not METRICS_PATH.exists():
+        return
+    if METRICS_PATH.stat().st_size < MAX_METRICS_SIZE:
+        return
+    # Rotate existing backups
+    for i in range(MAX_METRICS_BACKUPS - 1, 0, -1):
+        src = METRICS_PATH.parent / f"hook_metrics.jsonl.{i}"
+        dst = METRICS_PATH.parent / f"hook_metrics.jsonl.{i + 1}"
+        if src.exists():
+            src.rename(dst)
+    # Rotate current file
+    METRICS_PATH.rename(METRICS_PATH.parent / "hook_metrics.jsonl.1")
 
 
 def log_metric(
@@ -29,8 +47,13 @@ def log_metric(
     error_type: str | None = None,
     extra: dict[str, Any] | None = None,
 ) -> None:
-    """Append a structured metric line to hook_metrics.jsonl."""
+    """Append a structured metric line to hook_metrics.jsonl.
+
+    The extra dict must never contain secrets, credentials, or sensitive data.
+    Only pass structured, non-sensitive context fields.
+    """
     _ensure_metrics_dir()
+    _rotate_metrics()
     record: dict[str, Any] = {
         "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
         "hook": hook_name,

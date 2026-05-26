@@ -5,6 +5,7 @@ SessionStart hook - injects knowledge base context into every new session.
 import json
 
 from ._config import DAILY_DIR, INDEX_FILE, now, today_iso
+from ._hook_metrics import timed_hook
 
 MAX_CONTEXT_CHARS = 20_000
 MAX_LOG_LINES = 30
@@ -53,6 +54,11 @@ def build_context() -> str:
 
 
 def main() -> None:
+    with timed_hook("session_start"):
+        _run_session_start()
+
+
+def _run_session_start() -> None:
     context = build_context()
     output = {
         "hookSpecificOutput": {

@@ -9,8 +9,15 @@ import os
 import subprocess
 import sys
 
+from claude_cli._hook_metrics import timed_hook
+
 
 def main() -> int:
+    with timed_hook("pre_commit"):
+        return _run_pre_commit()
+
+
+def _run_pre_commit() -> int:
     for cmd, desc in [
         (["uv", "run", "ruff", "format", "src/"], "ruff format"),
         (["uv", "run", "ruff", "check", "--fix", "src/"], "ruff check --fix"),

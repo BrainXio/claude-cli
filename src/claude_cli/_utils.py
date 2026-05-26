@@ -8,6 +8,29 @@ from pathlib import Path
 from typing import Any, cast
 
 
+_LOG_FORMAT = "%(asctime)s %(levelname)s [%(name)s] %(message)s"
+_LOG_DATEFMT = "%Y-%m-%d %H:%M:%S"
+
+
+def get_logger(name: str, log_path: Path | None = None) -> logging.Logger:
+    """Return a configured logger for hook usage.
+
+    If log_path is provided, a FileHandler is added.
+    Otherwise, the logger propagates to the root handler.
+    """
+    logger = logging.getLogger(name)
+    if logger.handlers:
+        return logger
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter(_LOG_FORMAT, datefmt=_LOG_DATEFMT)
+    if log_path is not None:
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        handler = logging.FileHandler(str(log_path))
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+    return logger
+
+
 def extract_conversation_context(
     transcript_path: Path, max_turns: int = 30, max_chars: int = 15000
 ) -> tuple[str, int]:

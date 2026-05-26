@@ -4,7 +4,6 @@ PreCompact hook - captures conversation transcript before auto-compaction.
 
 from __future__ import annotations
 
-import logging
 import os
 from pathlib import Path
 
@@ -12,19 +11,20 @@ from pathlib import Path
 os.environ["PKB_SKIP_ENSURE_DIRS"] = "1"
 
 from ._config import ROOT_DIR, REPORTS_LOGS, REPORTS_TMP, now
-from ._utils import extract_conversation_context, parse_stdin_json, spawn_detached
-
-logging.basicConfig(
-    filename=str(REPORTS_LOGS / "flush.log"),
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s [pre-compact] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
+from ._hook_metrics import timed_hook
+from ._utils import extract_conversation_context, get_logger, parse_stdin_json, spawn_detached
 
 MIN_TURNS_TO_FLUSH = 5
 
 
 def main() -> None:
+    with timed_hook("pre_compact"):
+        _run_pre_compact()
+
+
+def _run_pre_compact() -> None:
+    logger = get_logger("pre_compact", REPORTS_LOGS / "flush.log")
+
     hook_input = parse_stdin_json()
     if hook_input is None:
         return
@@ -32,29 +32,29 @@ def main() -> None:
     session_id = hook_input.get("session_id", "unknown")
     transcript_path_str = hook_input.get("transcript_path", "")
 
-    logging.info("PreCompact fired: session=%s", session_id)
+    logger.info("PreCompact fired: session=%s", session_id)
 
     if not transcript_path_str or not isinstance(transcript_path_str, str):
-        logging.info("SKIP: no transcript path")
+        logger.info("SKIP: no transcript path")
         return
 
     if not isinstance(session_id, str):
-        logging.info("SKIP: invalid session_id")
+        logger.info("SKIP: invalid session_id")
         return
 
     transcript_path = Path(transcript_path_str)
     if not transcript_path.exists():
-        logging.info("SKIP: transcript missing: %s", transcript_path_str)
+        logger.info("SKIP: transcript missing: %s", transcript_path_str)
         return
 
     try:
         context, turn_count = extract_conversation_context(transcript_path)
     except Exception as e:
-        logging.error("Context extraction failed: %s", e)
+        logger.error("Context extraction failed: %s", e)
         return
 
     if not context.strip() or turn_count < MIN_TURNS_TO_FLUSH:
-        logging.info("SKIP: empty context or too few turns (%d)", turn_count)
+        logger.info("SKIP: empty context or too few turns (%d)", turn_count)
         return
 
     timestamp = now().strftime("%Y%m%d-%H%M%S")
@@ -75,7 +75,7 @@ def main() -> None:
     ]
 
     spawn_detached(cmd, cwd=str(ROOT_DIR))
-    logging.info(
+    logger.info(
         "Spawned flush.py for session %s (%d turns, %d chars)",
         session_id,
         turn_count,

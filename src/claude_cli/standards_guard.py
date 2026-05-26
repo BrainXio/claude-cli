@@ -11,6 +11,7 @@ import re
 import sys
 
 from claude_cli._config import get_allowed_repos
+from claude_cli._hook_metrics import timed_hook
 
 # --- Forbidden patterns ---
 
@@ -132,6 +133,11 @@ def check_workflow_content(content: str, file_path: str) -> list[str]:
 
 
 def main() -> None:
+    with timed_hook("standards_guard"):
+        _run_guard()
+
+
+def _run_guard() -> None:
     try:
         data = json.load(sys.stdin)
     except (json.JSONDecodeError, EOFError):
