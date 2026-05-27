@@ -93,6 +93,19 @@ claude-dispatch my-workflow --dry-run
 claude-check-model-vision
 ```
 
+### Inter-session bus operations
+
+```bash
+# Read last N messages
+claude-bus read 10
+
+# Write a message
+claude-bus write '{"content":"status","from":"session","to":"all","type":"status"}'
+
+# Claim next unclaimed message
+claude-bus claim
+```
+
 ## Commands
 
 | Command                     | Purpose                                      |
@@ -107,6 +120,8 @@ claude-check-model-vision
 | `claude-dispatch`           | Workflow dispatch utility                    |
 | `claude-knowledge`          | Knowledge engine CLI                         |
 | `claude-statusline`         | Statusline generator                         |
+| `claude-commit`             | Automated commits with rule enforcement      |
+| `claude-bus`                | Inter-session bus CLI (read, write, claim)   |
 
 ## Development
 
