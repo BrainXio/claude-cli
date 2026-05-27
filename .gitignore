@@ -1,23 +1,2 @@
-# Coverage
-.coverage
-htmlcov/
-
-# IDE
-.idea/
-.vscode/
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Python build artifacts
-*.egg-info/
-*.pyc
-__pycache__/
-dist/
-
-# Logs
-*.log
-
-# Virtual environments
-.venv/
+# Runtime artifacts
+.emergency_stop
