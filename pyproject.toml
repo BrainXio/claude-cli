@@ -21,6 +21,7 @@ claude-standards-guard    = "claude_cli.standards_guard:main"
 
 # Utilities
 claude-bus                = "claude_cli._bus:main"
+claude-commit             = "claude_cli.commit:main"
 claude-dispatch           = "claude_cli.dispatch:main"
 claude-knowledge          = "claude_knowledge.cli:main"
 claude-statusline         = "claude_cli.statusline:main"
