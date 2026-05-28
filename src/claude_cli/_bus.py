@@ -15,7 +15,9 @@ import argparse
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
-BUS_FILE = Path.home() / "workspace" / ".claude" / "comms" / "inter_session_bus.jsonl"
+from ._config import INTER_SESSION_BUS
+
+BUS_FILE = INTER_SESSION_BUS
 
 
 def cmd_read(n=10):
@@ -24,7 +26,7 @@ def cmd_read(n=10):
         return []
     with open(BUS_FILE) as f:
         lines = f.readlines()
-    return [json.loads(l) for l in lines[-n:]]
+    return [json.loads(line) for line in lines[-n:]]
 
 
 def cmd_write(msg_json):
@@ -45,7 +47,7 @@ def cmd_metrics(n=50):
         try:
             with open(mf) as f:
                 lines = f.readlines()
-            entries = [json.loads(l) for l in lines[-n:] if l.strip()]
+            entries = [json.loads(line) for line in lines[-n:] if line.strip()]
             failures = [e for e in entries if e.get("failure") is True]
             over_2s = [
                 e
@@ -73,9 +75,7 @@ def cmd_heartbeat(session_name):
         for k, v in metrics.items()
         if "error" not in v
     )
-    content = (
-        f"Session {session_name} alive. Metrics: {summary}. Clean: {all_clean}."
-    )
+    content = f"Session {session_name} alive. Metrics: {summary}. Clean: {all_clean}."
     msg = cmd_write(
         json.dumps(
             {

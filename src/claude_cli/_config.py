@@ -33,9 +33,17 @@ STATE_FILE = DATA_DIR / "state.json"
 
 # Workspace root resolution (find .git or use cwd)
 def _find_workspace_root() -> Path:
-    """Find workspace root by locating .git directory."""
+    """Find workspace root by locating .git directory or env var override."""
+    # Env var override takes precedence
+    env_root = os.environ.get("BRAINXIO_WORKSPACE_ROOT")
+    if env_root:
+        return Path(env_root).expanduser().resolve()
+
     cwd = Path.cwd()
     for parent in [cwd, *cwd.parents]:
+        # Look for workspace-level marker (data/ directory with bus/)
+        if (parent / "data" / "bus").exists():
+            return parent
         if (parent / ".git").exists():
             return parent
     return cwd
