@@ -11,7 +11,16 @@ import subprocess
 from datetime import datetime, timezone
 from pathlib import Path
 
-from ._config import DATA_DIR, STATE_FILE, REPORTS_LOGS, REPORTS_STATE, REPORTS_TMP
+from ._config import (
+    DATA_DIR,
+    STATE_FILE,
+    REPORTS_LOGS,
+    REPORTS_STATE,
+    REPORTS_TMP,
+    DAILY_DIR,
+    KNOWLEDGE_DIR,
+    WORKSPACE_ROOT,
+)
 from ._hook_metrics import timed_hook
 
 
@@ -174,14 +183,12 @@ def _run_bootstrap() -> None:
         },
     }
 
-    for d in (
-        DATA_DIR,
-        DATA_DIR / "daily",
-        DATA_DIR / "knowledge",
-        REPORTS_LOGS,
-        REPORTS_STATE,
-        REPORTS_TMP,
-    ):
+    # Global runtime state (~/.claude/data/)
+    for d in (DATA_DIR, REPORTS_LOGS, REPORTS_STATE, REPORTS_TMP):
+        d.mkdir(parents=True, exist_ok=True)
+
+    # Workspace-local data (workspace/data/)
+    for d in (DAILY_DIR, KNOWLEDGE_DIR, WORKSPACE_ROOT / "data" / "bus"):
         d.mkdir(parents=True, exist_ok=True)
     STATE_FILE.write_text(json.dumps(state, indent=2) + "\n")
     print(f"State persisted to {STATE_FILE}")

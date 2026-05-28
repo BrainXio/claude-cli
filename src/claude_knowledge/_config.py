@@ -45,13 +45,52 @@ ROOT_DIR = _find_root_dir()
 AGENT_DIR = Path(os.getenv("PKB_AGENT_DIR", "~/.claude")).expanduser().resolve()
 
 # ── Project Content Directories ───────────────────────────────────────
-# Output directories at user's home (~), not under ~/.claude
-DAILY_DIR = Path("~/daily").expanduser().resolve()
-KNOWLEDGE_DIR = Path("~/knowledge-base").expanduser().resolve()
+# Workspace-local data directories (under workspace/data/)
+# Can be overridden via environment variables:
+#   CLAUDE_DAILY_DIR, CLAUDE_KNOWLEDGE_DIR, CLAUDE_REPORTS_DIR
+
+
+def _find_workspace_root() -> Path:
+    """Find workspace root by locating .git directory with submodule awareness.
+
+    When running from a submodule (e.g., packages/claude-cli), we need to find
+    the workspace root, not the submodule root. Look for workspace-level markers.
+    """
+    cwd = Path.cwd()
+    for parent in [cwd, *cwd.parents]:
+        # Workspace-level markers (not in submodules)
+        if (parent / "packages").is_dir() and (parent / "infra").is_dir():
+            return parent
+        # Fallback: any .git directory
+        if (parent / ".git").exists():
+            # Check if this looks like workspace root (has packages/ or infra/)
+            if (parent / "packages").is_dir() or (parent / "infra").is_dir():
+                return parent
+    return cwd
+
+
+_WORKSPACE_ROOT = _find_workspace_root()
+_WORKSPACE_DATA = _WORKSPACE_ROOT / "data"
+_DOCS_ROOT = _WORKSPACE_ROOT / "docs"
+
+DAILY_DIR = (
+    Path(os.getenv("CLAUDE_DAILY_DIR", str(_WORKSPACE_DATA / "daily")))
+    .expanduser()
+    .resolve()
+)
+KNOWLEDGE_DIR = (
+    Path(os.getenv("CLAUDE_KNOWLEDGE_DIR", str(_WORKSPACE_DATA / "kb")))
+    .expanduser()
+    .resolve()
+)
 CONCEPTS_DIR = KNOWLEDGE_DIR / "concepts"
 CONNECTIONS_DIR = KNOWLEDGE_DIR / "connections"
 QA_DIR = KNOWLEDGE_DIR / "qa"
-REPORTS_DIR = Path("~/reports").expanduser().resolve()
+REPORTS_DIR = (
+    Path(os.getenv("CLAUDE_REPORTS_DIR", str(_DOCS_ROOT / "reports")))
+    .expanduser()
+    .resolve()
+)
 
 # ── Tool Directories (all now under scripts/) ─────────────────────────
 SCRIPTS_DIR = AGENT_DIR / "scripts"

@@ -12,6 +12,7 @@ BrainXio claude-cli Python package — lifecycle hooks, quality gates, and CLI u
 | `claude-pre-compact`        | `claude_cli.pre_compact:main`        | Pre-compaction context preservation          |
 | `claude-pre-commit`         | `claude_cli.pre_commit:main`         | Quality gate (ruff, mypy, pytest)            |
 | `claude-standards-guard`    | `claude_cli.standards_guard:main`    | PreToolUse validator for Edit/Write          |
+| `claude-post-tool-use`      | `claude_cli.post_tool_use:main`      | PostToolUse hook — error detection & incident response |
 | `claude-check-model-vision` | `claude_cli.check_model_vision:main` | Vision capability detection                  |
 | `claude-dispatch`           | `claude_cli.dispatch:main`           | Workflow dispatch engine                     |
 | `claude-knowledge`          | `claude_knowledge.cli:main`          | KB pipeline CLI (ingest, compile, query)     |

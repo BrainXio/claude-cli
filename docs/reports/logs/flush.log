@@ -1,0 +1,54 @@
+2026-05-28 02:53:55 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 02:53:55 INFO [pre_compact] SKIP: no transcript path
+2026-05-28 02:53:55 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 02:53:55 INFO [pre_compact] SKIP: no transcript path
+2026-05-28 02:53:55 INFO [pre_compact] PreCompact fired: session=12345
+2026-05-28 02:53:55 INFO [pre_compact] SKIP: invalid session_id
+2026-05-28 02:53:55 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 02:53:55 INFO [pre_compact] SKIP: transcript missing: /nonexistent/path.jsonl
+2026-05-28 02:53:55 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 02:53:55 INFO [pre_compact] SKIP: transcript missing: /tmp/test.jsonl
+2026-05-28 02:53:55 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 02:53:55 INFO [pre_compact] SKIP: transcript missing: /tmp/test.jsonl
+2026-05-28 02:53:55 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 02:53:55 INFO [pre_compact] Spawned flush.py for session test-session (5 turns, 12 chars)
+2026-05-28 02:53:55 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 02:53:55 INFO [pre_compact] SKIP: transcript missing: /tmp/test.jsonl
+2026-05-28 02:53:55 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 02:53:55 INFO [pre_compact] Spawned flush.py for session test-session (5 turns, 12 chars)
+2026-05-28 03:01:25 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 03:01:25 INFO [pre_compact] SKIP: no transcript path
+2026-05-28 03:01:25 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 03:01:25 INFO [pre_compact] SKIP: no transcript path
+2026-05-28 03:01:25 INFO [pre_compact] PreCompact fired: session=12345
+2026-05-28 03:01:25 INFO [pre_compact] SKIP: invalid session_id
+2026-05-28 03:01:25 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 03:01:25 INFO [pre_compact] SKIP: transcript missing: /nonexistent/path.jsonl
+2026-05-28 03:01:25 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 03:01:25 INFO [pre_compact] SKIP: transcript missing: /tmp/test.jsonl
+2026-05-28 03:01:25 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 03:01:25 INFO [pre_compact] SKIP: transcript missing: /tmp/test.jsonl
+2026-05-28 03:01:25 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 03:01:25 INFO [pre_compact] Spawned flush.py for session test-session (5 turns, 12 chars)
+2026-05-28 03:01:25 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 03:01:25 INFO [pre_compact] SKIP: transcript missing: /tmp/test.jsonl
+2026-05-28 03:01:25 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 03:01:25 INFO [pre_compact] Spawned flush.py for session test-session (5 turns, 12 chars)
+2026-05-28 03:06:33 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 03:06:33 INFO [pre_compact] SKIP: no transcript path
+2026-05-28 03:06:33 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 03:06:33 INFO [pre_compact] SKIP: no transcript path
+2026-05-28 03:06:33 INFO [pre_compact] PreCompact fired: session=12345
+2026-05-28 03:06:33 INFO [pre_compact] SKIP: invalid session_id
+2026-05-28 03:06:33 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 03:06:33 INFO [pre_compact] SKIP: transcript missing: /nonexistent/path.jsonl
+2026-05-28 03:06:33 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 03:06:33 INFO [pre_compact] SKIP: transcript missing: /tmp/test.jsonl
+2026-05-28 03:06:33 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 03:06:33 INFO [pre_compact] SKIP: transcript missing: /tmp/test.jsonl
+2026-05-28 03:06:33 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 03:06:33 INFO [pre_compact] Spawned flush.py for session test-session (5 turns, 12 chars)
+2026-05-28 03:06:33 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 03:06:33 INFO [pre_compact] SKIP: transcript missing: /tmp/test.jsonl
+2026-05-28 03:06:33 INFO [pre_compact] PreCompact fired: session=test-session
+2026-05-28 03:06:33 INFO [pre_compact] Spawned flush.py for session test-session (5 turns, 12 chars)

@@ -5,4 +5,4 @@ There is no stable Python import surface; import submodules directly
 if you must, but expect churn.
 """
 
-__all__ = []
+__all__: list[str] = []

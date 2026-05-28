@@ -4,11 +4,15 @@
 Claude Code PreToolUse hook for Edit and Write tools.
 Receives JSON on stdin, checks new content for forbidden patterns.
 Exit 0 with JSON output to deny; exit 0 with no output to allow.
+
+Extended: Also loads relevant incident mitigations before tool execution.
 """
 
 import json
+import os
 import re
 import sys
+from pathlib import Path
 
 from claude_cli._config import get_allowed_repos
 from claude_cli._hook_metrics import timed_hook
@@ -132,17 +136,56 @@ def check_workflow_content(content: str, file_path: str) -> list[str]:
     return violations
 
 
-def main() -> None:
-    with timed_hook("standards_guard"):
-        _run_guard()
+def load_relevant_mitigations(tool_input: dict, workspace_root: Path) -> str | None:
+    """Load relevant incident mitigations before tool execution.
 
+    Reads last_error.json from PostToolUse hook and surfaces mitigations.
+    Returns context string to inject, or None if no relevant mitigations.
+    """
+    error_file = workspace_root / ".claude" / "last_error.json"
+    if not error_file.exists():
+        return None
 
-def _run_guard() -> None:
     try:
-        data = json.load(sys.stdin)
-    except (json.JSONDecodeError, EOFError):
-        return
+        error_ctx = json.loads(error_file.read_text())
+    except (json.JSONDecodeError, OSError):
+        return None
 
+    relevant = error_ctx.get("relevant_mitigations", [])
+    if not relevant:
+        return None
+
+    # Build context from mitigation files
+    mitigation_texts = []
+    for mit_path in relevant[:3]:  # Max 3 mitigations
+        mit_file = Path(mit_path)
+        if mit_file.exists():
+            content = mit_file.read_text()
+            # Extract key sections
+            mitigation_texts.append(f"### {mit_file.stem}\n{content[:500]}...")
+
+    if mitigation_texts:
+        return (
+            "\n\n**INCIDENT MITIGATION CONTEXT**\n"
+            "Relevant mitigations from prior incidents:\n\n"
+            + "\n\n".join(mitigation_texts)
+            + "\n\nApply these mitigations before proceeding with the tool."
+        )
+    return None
+
+
+def _load_mitigations(tool_input: dict, workspace_root: Path) -> None:
+    """Load and surface relevant mitigations from prior incidents."""
+    context = load_relevant_mitigations(tool_input, workspace_root)
+
+    if context:
+        # Write to a file that the agent can read via PreToolUse additionalContext
+        context_file = workspace_root / ".claude" / "mitigation_context.md"
+        context_file.parent.mkdir(parents=True, exist_ok=True)
+        context_file.write_text(context)
+
+
+def _run_guard(data: dict) -> None:
     tool_name = data.get("tool_name", "")
     tool_input = data.get("tool_input", {})
     file_path = tool_input.get("file_path", "")
@@ -182,7 +225,28 @@ def _run_guard() -> None:
         }
         print(json.dumps(output))
 
-    return
+
+def main() -> None:
+    with timed_hook("standards_guard"):
+        # Read stdin once
+        try:
+            data = json.load(sys.stdin)
+        except (json.JSONDecodeError, EOFError):
+            return
+
+        # Determine workspace root
+        workspace_root = Path(os.getcwd())
+        for parent in [workspace_root] + list(workspace_root.parents):
+            if (parent / ".git").exists() or (parent / "CLAUDE.md").exists():
+                workspace_root = parent
+                break
+
+        # Run standards guard
+        _run_guard(data)
+
+        # Load mitigations for context
+        tool_input = data.get("tool_input", {})
+        _load_mitigations(tool_input, workspace_root)
 
 
 if __name__ == "__main__":

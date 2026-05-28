@@ -18,6 +18,7 @@ claude-pre-commit         = "claude_cli.pre_commit:main"
 claude-session-end        = "claude_cli.session_end:main"
 claude-session-start      = "claude_cli.session_start:main"
 claude-standards-guard    = "claude_cli.standards_guard:main"
+claude-post-tool-use      = "claude_cli.post_tool_use:main"
 
 # Utilities
 claude-bus                = "claude_cli._bus:main"

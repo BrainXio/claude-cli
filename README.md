@@ -13,6 +13,7 @@ Core CLI hooks and utilities that integrate with Claude Code's lifecycle:
 - **pre-compact** — Pre-compaction hook for context preservation before session compaction.
 - **pre-commit** — Quality gate that runs ruff, mypy, and pytest before allowing commits.
 - **standards-guard** — PreToolUse hook that blocks forbidden content in standards docs and workflow files.
+- **post-tool-use** — PostToolUse hook that detects errors and triggers incident response.
 - **check-model-vision** — Detects vision capability for configured Ollama models.
 - **dispatch** — Workflow dispatch engine for multi-stage agent pipelines.
 - **statusline** — Generates session statusline output.
@@ -115,7 +116,8 @@ claude-bus claim
 | `claude-session-end`        | Session end hook (cleanup, summary)          |
 | `claude-pre-compact`        | Pre-compaction hook (context preservation)   |
 | `claude-pre-commit`         | Pre-commit hook (ruff, mypy, pytest)         |
-| `claude-standards-guard`    | Standards enforcement before Edit/Write      |
+| `claude-standards-guard`    | PreToolUse hook — standards enforcement      |
+| `claude-post-tool-use`      | PostToolUse hook — error detection & incident response |
 | `claude-check-model-vision` | Detect Ollama vision capability              |
 | `claude-dispatch`           | Workflow dispatch utility                    |
 | `claude-knowledge`          | Knowledge engine CLI                         |
